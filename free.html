@@ -1,91 +1,87 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Login or Sign Up</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Google Auth with Firebase</title>
   <style>
-    body { font-family: Arial; padding: 20px; }
-    input, button { display: block; margin: 10px 0; padding: 10px; width: 250px; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 40px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      text-align: center;
+    }
+    button {
+      background: #4285F4;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: center;
+    }
+    button img {
+      width: 20px;
+    }
   </style>
 </head>
 <body>
-  <h2>Register / Login</h2>
+  <div class="container">
+    <h2>Login with Google</h2>
+    <button id="google-login">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo" />
+      Sign in with Google
+    </button>
+    <p id="user-info"></p>
+  </div>
 
-  <input type="text" id="name" placeholder="Full Name" />
-  <input type="text" id="mobile" placeholder="Mobile Number" />
-  <input type="email" id="email" placeholder="Email" />
-  <input type="password" id="password" placeholder="Password" />
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-  <button onclick="signUp()">Sign Up</button>
-  <button onclick="login()">Login</button>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import {
-      getAuth,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      updateProfile,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-    import {
-      getDatabase,
-      ref,
-      set
-    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
-
+  <script>
+    // TODO: Replace with your Firebase config
     const firebaseConfig = {
-      apiKey: "AIzaSyA-P5EbBSTvzINV8DebaYN3AfsAO4Qt7k8",
-      authDomain: "demo420-c8c7b.firebaseapp.com",
-      databaseURL: "https://demo420-c8c7b-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "demo420-c8c7b",
-      storageBucket: "demo420-c8c7b.appspot.com",
-      messagingSenderId: "76809685599",
-      appId: "1:76809685599:web:a4100117563404e392a9ea"
+       apiKey: "AIzaSyA-P5EbBSTvzINV8DebaYN3AfsAO4Qt7k8",
+  authDomain: "demo420-c8c7b.firebaseapp.com",
+  databaseURL: "https://demo420-c8c7b-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "demo420-c8c7b",
+  storageBucket: "demo420-c8c7b.firebasestorage.app",
+  messagingSenderId: "76809685599",
+  appId: "1:76809685599:web:a4100117563404e392a9ea",
+  measurementId: "G-LP2KB3BLCW"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const database = getDatabase(app);
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        window.location.href = "https://abc.xyz";
-      }
+    // Google Sign-in
+    document.getElementById('google-login').addEventListener('click', () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider)
+        .then(result => {
+          // Redirect to abc.xyz
+          window.location.href = "https://abc.xyz";
+        })
+        .catch(error => {
+          console.error(error);
+          alert('Authentication failed!');
+        });
     });
-
-    window.signUp = function () {
-      const name = document.getElementById("name").value;
-      const mobile = document.getElementById("mobile").value;
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-
-      createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          updateProfile(user, { displayName: name });
-
-          set(ref(database, 'users/' + user.uid), {
-            name,
-            mobile,
-            email,
-            photoURL: ""
-          });
-
-          window.location.href = "https://abc.xyz";
-        })
-        .catch((error) => alert(error.message));
-    }
-
-    window.login = function () {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-
-      signInWithEmailAndPassword(auth, email, password)
-        .then(() => {
-          window.location.href = "https://abc.xyz";
-        })
-        .catch((error) => alert(error.message));
-    }
   </script>
 </body>
 </html>
