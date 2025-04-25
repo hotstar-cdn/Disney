@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login / Signup</title>
+  <style>
+    body { font-family: sans-serif; background: #0e0e0e; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; }
+    input, button { padding: 10px; margin: 5px; border: none; border-radius: 5px; }
+    .hidden { display: none; }
+    #container { background: #1e1e1e; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #000; }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="email-phase">
+      <h2>Enter your Email</h2>
+      <input type="email" id="email" placeholder="Email">
+      <button onclick="checkEmail()">Next</button>
+    </div>
+
+    <div id="password-phase" class="hidden">
+      <h2>Enter Password</h2>
+      <input type="password" id="password" placeholder="Password">
+      <button onclick="login()">Login</button>
+    </div>
+
+    <div id="signup-phase" class="hidden">
+      <h2>Sign Up</h2>
+      <input type="text" id="name" placeholder="Name"><br>
+      <input type="email" id="signup-email" disabled><br>
+      <input type="password" id="signup-password" placeholder="Password"><br>
+      <button onclick="signup()">Register</button>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <script>
+    // Your Firebase config here
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "SENDER_ID",
+      appId: "APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Auto redirect if logged in
+    const currentUser = JSON.parse(localStorage.getItem("user"));
+    if (currentUser) {
+      window.location.href = "https://abc.xyz";
+    }
+
+    let userEmail = "";
+
+    function checkEmail() {
+      userEmail = document.getElementById("email").value.trim().toLowerCase().replace(/\./g, "_");
+      if (!userEmail) return alert("Please enter email.");
+
+      db.ref("users/" + userEmail).get().then(snapshot => {
+        if (snapshot.exists()) {
+          document.getElementById("email-phase").classList.add("hidden");
+          document.getElementById("password-phase").classList.remove("hidden");
+        } else {
+          document.getElementById("email-phase").classList.add("hidden");
+          document.getElementById("signup-phase").classList.remove("hidden");
+          document.getElementById("signup-email").value = document.getElementById("email").value;
+        }
+      });
+    }
+
+    function login() {
+      const pass = document.getElementById("password").value;
+      db.ref("users/" + userEmail).get().then(snapshot => {
+        if (snapshot.exists()) {
+          const userData = snapshot.val();
+          if (userData.password === pass) {
+            localStorage.setItem("user", JSON.stringify(userData));
+            window.location.href = "https://abc.xyz";
+          } else {
+            alert("Incorrect password.");
+          }
+        } else {
+          alert("No such user found.");
+        }
+      });
+    }
+
+    function signup() {
+      const name = document.getElementById("name").value.trim();
+      const pass = document.getElementById("signup-password").value.trim();
+      if (!name || !pass) return alert("Please fill all fields.");
+
+      const email = document.getElementById("signup-email").value.trim().toLowerCase().replace(/\./g, "_");
+
+      const userObj = { name, email: document.getElementById("signup-email").value, password: pass };
+      db.ref("users/" + email).set(userObj, () => {
+        localStorage.setItem("user", JSON.stringify(userObj));
+        window.location.href = "https://abc.xyz";
+      });
+    }
+  </script>
+</body>
+</html>
