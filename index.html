@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sign Up / Login</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input, button { display: block; margin: 10px 0; padding: 10px; width: 250px; }
+  </style>
+</head>
+<body>
+  <h2>Register / Login</h2>
+
+  <input type="text" id="name" placeholder="Full Name" />
+  <input type="text" id="mobile" placeholder="Mobile Number" />
+  <input type="email" id="email" placeholder="Email" />
+  <input type="password" id="password" placeholder="Password" />
+
+  <button onclick="signUp()">Sign Up</button>
+  <button onclick="login()">Login</button>
+
+  <script type="module">
+    // 🔥 Firebase imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      updateProfile
+    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+    import {
+      getDatabase,
+      ref,
+      set
+    } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+
+    // 🧩 Your Firebase config (replace with your own keys)
+    const firebaseConfig = {
+      apiKey: "AIzaSyA-P5EbBSTvzINV8DebaYN3AfsAO4Qt7k8",
+  authDomain: "demo420-c8c7b.firebaseapp.com",
+  databaseURL: "https://demo420-c8c7b-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "demo420-c8c7b",
+  storageBucket: "demo420-c8c7b.firebasestorage.app",
+  messagingSenderId: "76809685599",
+  appId: "1:76809685599:web:a4100117563404e392a9ea",
+  measurementId: "G-LP2KB3BLCW"
+    };
+
+    // 🔌 Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const database = getDatabase(app);
+
+    // 🔐 Sign Up
+    window.signUp = function () {
+      const name = document.getElementById("name").value;
+      const mobile = document.getElementById("mobile").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+
+          // 👤 Set display name
+          updateProfile(user, { displayName: name });
+
+          // 💾 Store in Realtime DB
+          set(ref(database, 'users/' + user.uid), {
+            name,
+            mobile,
+            email
+          });
+
+          alert("Registered successfully!");
+        })
+        .catch((error) => alert(error.message));
+    }
+
+    // 🔐 Login
+    window.login = function () {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          // ✅ Redirect after login
+          window.location.href = "https://abc.xyz";
+        })
+        .catch((error) => alert(error.message));
+    }
+  </script>
+</body>
+</html>
