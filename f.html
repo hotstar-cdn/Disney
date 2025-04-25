@@ -53,29 +53,38 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
   <script>
-    // TODO: Replace with your Firebase config
+    // Firebase config from the user
     const firebaseConfig = {
-       apiKey: "AIzaSyA-P5EbBSTvzINV8DebaYN3AfsAO4Qt7k8",
-  authDomain: "demo420-c8c7b.firebaseapp.com",
-  databaseURL: "https://demo420-c8c7b-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "demo420-c8c7b",
-  storageBucket: "demo420-c8c7b.firebasestorage.app",
-  messagingSenderId: "76809685599",
-  appId: "1:76809685599:web:a4100117563404e392a9ea",
-  measurementId: "G-LP2KB3BLCW"
+      apiKey: "AIzaSyA-P5EbBSTvzINV8DebaYN3AfsAO4Qt7k8",
+      authDomain: "demo420-c8c7b.firebaseapp.com",
+      databaseURL: "https://demo420-c8c7b-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "demo420-c8c7b",
+      storageBucket: "demo420-c8c7b.firebasestorage.app",
+      messagingSenderId: "76809685599",
+      appId: "1:76809685599:web:a4100117563404e392a9ea",
+      measurementId: "G-LP2KB3BLCW"
     };
 
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
+    // Monitor authentication state
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        // If the user is authenticated, redirect
+        window.location.href = "https://abc.xyz";
+      }
+    });
+
     // Google Sign-in
     document.getElementById('google-login').addEventListener('click', () => {
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider)
         .then(result => {
-          // Redirect to abc.xyz
-          window.location.href = "https://abc.xyz";
+          // You can access user info here (optional)
+          const user = result.user;
+          document.getElementById('user-info').innerText = `Hello, ${user.displayName} (${user.email})`;
         })
         .catch(error => {
           console.error(error);
