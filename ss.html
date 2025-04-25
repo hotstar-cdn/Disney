@@ -19,7 +19,6 @@
   <button onclick="login()">Login</button>
 
   <script type="module">
-    // 🔥 Firebase imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
     import {
       getAuth,
@@ -33,9 +32,8 @@
       set
     } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
-    // 🧩 Your Firebase config (replace with your own keys)
     const firebaseConfig = {
-      apiKey: "AIzaSyA-P5EbBSTvzINV8DebaYN3AfsAO4Qt7k8",
+     apiKey: "AIzaSyA-P5EbBSTvzINV8DebaYN3AfsAO4Qt7k8",
   authDomain: "demo420-c8c7b.firebaseapp.com",
   databaseURL: "https://demo420-c8c7b-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "demo420-c8c7b",
@@ -45,12 +43,10 @@
   measurementId: "G-LP2KB3BLCW"
     };
 
-    // 🔌 Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const database = getDatabase(app);
 
-    // 🔐 Sign Up
     window.signUp = function () {
       const name = document.getElementById("name").value;
       const mobile = document.getElementById("mobile").value;
@@ -60,11 +56,8 @@
       createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
           const user = userCredential.user;
-
-          // 👤 Set display name
           updateProfile(user, { displayName: name });
 
-          // 💾 Store in Realtime DB
           set(ref(database, 'users/' + user.uid), {
             name,
             mobile,
@@ -72,19 +65,19 @@
           });
 
           alert("Registered successfully!");
+          window.location.href = `profile.html?uid=${user.uid}&size=16px&color=0000ff`;
         })
         .catch((error) => alert(error.message));
     }
 
-    // 🔐 Login
     window.login = function () {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
 
       signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
-          // ✅ Redirect after login
-          window.location.href = "https://abc.xyz";
+          const user = userCredential.user;
+          window.location.href = `profile.html?uid=${user.uid}&size=18px&color=00aa00`;
         })
         .catch((error) => alert(error.message));
     }
