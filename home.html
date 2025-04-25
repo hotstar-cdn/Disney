@@ -5,51 +5,60 @@
   <style>
     body {
       font-family: sans-serif;
-      background: #0e0e0e;
+      background: #121212;
       color: white;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      flex-direction: column;
     }
-    input, button {
-      padding: 10px;
-      margin: 5px;
-      border: none;
-      border-radius: 5px;
-    }
-    .hidden {
-      display: none;
-    }
+
     #container {
       background: #1e1e1e;
       padding: 20px;
       border-radius: 10px;
-      box-shadow: 0 0 10px #000;
+      width: 300px;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 5px;
+    }
+
+    button {
+      background-color: #6a00dc;
+      color: white;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
   <div id="container">
     <div id="email-phase">
-      <h2>Enter your Email</h2>
+      <h3>Enter your Email</h3>
       <input type="email" id="email" placeholder="Email">
       <button onclick="checkEmail()">Next</button>
     </div>
 
     <div id="password-phase" class="hidden">
-      <h2>Enter Password</h2>
+      <h3>Enter your Password</h3>
       <input type="password" id="password" placeholder="Password">
       <button onclick="login()">Login</button>
     </div>
 
     <div id="signup-phase" class="hidden">
-      <h2>Sign Up</h2>
-      <input type="text" id="name" placeholder="Name"><br>
-      <input type="email" id="signup-email" disabled><br>
-      <input type="password" id="signup-password" placeholder="Password"><br>
-      <button onclick="signup()">Register</button>
+      <h3>Sign Up</h3>
+      <input type="text" id="name" placeholder="Full Name">
+      <input type="email" id="signup-email" disabled>
+      <input type="password" id="signup-password" placeholder="Password">
+      <button onclick="signup()">Sign Up</button>
     </div>
   </div>
 
@@ -58,7 +67,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script>
-    // ✅ Your Firebase Config
+    // ✅ Your Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyApZTgxDXm00BDPZtsW0tyCY78tzuvgRNQ",
       authDomain: "laxmi-chit-fund-8ccea.firebaseapp.com",
@@ -73,8 +82,8 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Auto redirect if already logged in
-    const currentUser = JSON.parse(localStorage.getItem("user"));
+    // ✅ Check if already logged in
+    const currentUser = localStorage.getItem("user");
     if (currentUser) {
       window.location.href = "https://abc.xyz";
     }
@@ -83,60 +92,55 @@
 
     function checkEmail() {
       rawEmail = document.getElementById("email").value.trim().toLowerCase();
-      safeEmail = rawEmail.replace(/\./g, "_");
+      if (!rawEmail.includes("@")) return alert("Enter a valid email.");
 
-      if (!rawEmail) return alert("Please enter an email.");
+      safeEmail = rawEmail.replace(/\./g, "_"); // For Firebase keys
 
       db.ref("users/" + safeEmail).once("value").then(snapshot => {
         if (snapshot.exists()) {
+          // Show login form
           document.getElementById("email-phase").classList.add("hidden");
           document.getElementById("password-phase").classList.remove("hidden");
         } else {
+          // Show signup form
           document.getElementById("email-phase").classList.add("hidden");
           document.getElementById("signup-phase").classList.remove("hidden");
           document.getElementById("signup-email").value = rawEmail;
         }
-      }).catch(error => {
-        console.error("Error checking email:", error);
       });
     }
 
     function login() {
-      const pass = document.getElementById("password").value;
+      const password = document.getElementById("password").value;
 
       db.ref("users/" + safeEmail).once("value").then(snapshot => {
-        if (snapshot.exists()) {
-          const userData = snapshot.val();
-          if (userData.password === pass) {
-            localStorage.setItem("user", JSON.stringify(userData));
-            window.location.href = "https://abc.xyz";
-          } else {
-            alert("Incorrect password.");
-          }
+        const user = snapshot.val();
+        if (user && user.password === password) {
+          localStorage.setItem("user", JSON.stringify(user));
+          window.location.href = "https://abc.xyz";
         } else {
-          alert("User not found.");
+          alert("Wrong password.");
         }
-      }).catch(error => {
-        console.error("Login error:", error);
       });
     }
 
     function signup() {
-      const name = document.getElementById("name").value.trim();
-      const pass = document.getElementById("signup-password").value.trim();
-      const email = rawEmail;
-      const key = safeEmail;
+      const name = document.getElementById("name").value;
+      const password = document.getElementById("signup-password").value;
 
-      if (!name || !pass) return alert("Fill all fields.");
+      if (!name || !password) {
+        alert("Please fill all fields.");
+        return;
+      }
 
-      const userObj = {
+      const user = {
         name,
-        email,
-        password: pass
+        email: rawEmail,
+        password
       };
 
-      db.ref("users/" + key).set(userObj, () => {
-        localStorage.setItem("user", JSON.stringify(userObj));
+      db.ref("users/" + safeEmail).set(user, () => {
+        localStorage.setItem("user", JSON.stringify(user));
         window.location.href = "https://abc.xyz";
       });
     }
