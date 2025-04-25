@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Login / Signup</title>
   <style>
     body {
-      font-family: sans-serif;
-      background: #121212;
+      font-family: Arial, sans-serif;
+      background: #111;
       color: white;
       display: flex;
       justify-content: center;
@@ -14,7 +15,7 @@
     }
 
     #container {
-      background: #1e1e1e;
+      background: #222;
       padding: 20px;
       border-radius: 10px;
       width: 300px;
@@ -24,12 +25,12 @@
       width: 100%;
       padding: 10px;
       margin: 8px 0;
-      border: none;
       border-radius: 5px;
+      border: none;
     }
 
     button {
-      background-color: #6a00dc;
+      background: #6a00dc;
       color: white;
       cursor: pointer;
     }
@@ -42,14 +43,14 @@
 <body>
   <div id="container">
     <div id="email-phase">
-      <h3>Enter your Email</h3>
+      <h3>Enter Email</h3>
       <input type="email" id="email" placeholder="Email">
       <button onclick="checkEmail()">Next</button>
     </div>
 
-    <div id="password-phase" class="hidden">
-      <h3>Enter your Password</h3>
-      <input type="password" id="password" placeholder="Password">
+    <div id="login-phase" class="hidden">
+      <h3>Enter Password</h3>
+      <input type="password" id="login-password" placeholder="Password">
       <button onclick="login()">Login</button>
     </div>
 
@@ -62,86 +63,84 @@
     </div>
   </div>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script>
-    // ✅ Your Firebase config
+    // ✅ Firebase Config
     const firebaseConfig = {
-      apiKey: "AIzaSyApZTgxDXm00BDPZtsW0tyCY78tzuvgRNQ",
-      authDomain: "laxmi-chit-fund-8ccea.firebaseapp.com",
-      projectId: "laxmi-chit-fund-8ccea",
-      storageBucket: "laxmi-chit-fund-8ccea.firebasestorage.app",
-      messagingSenderId: "843927571709",
-      appId: "1:843927571709:web:2358b56364d08ff65e0294",
-      measurementId: "G-YDGZC07H35",
-      databaseURL: "https://laxmi-chit-fund-8ccea-default-rtdb.firebaseio.com"
+        apiKey: "AIzaSyA-P5EbBSTvzINV8DebaYN3AfsAO4Qt7k8",
+  authDomain: "demo420-c8c7b.firebaseapp.com",
+  databaseURL: "https://demo420-c8c7b-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "demo420-c8c7b",
+  storageBucket: "demo420-c8c7b.firebasestorage.app",
+  messagingSenderId: "76809685599",
+  appId: "1:76809685599:web:a4100117563404e392a9ea",
+  measurementId: "G-LP2KB3BLCW"
     };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // ✅ Check if already logged in
-    const currentUser = localStorage.getItem("user");
-    if (currentUser) {
-      window.location.href = "https://abc.xyz";
+    // ✅ Auto-login if already saved
+    const existingUser = localStorage.getItem("user");
+    if (existingUser) {
+      window.location.href = "profile.html";
     }
 
-    let rawEmail = "", safeEmail = "";
+    let emailRaw = "", emailSafe = "";
 
     function checkEmail() {
-      rawEmail = document.getElementById("email").value.trim().toLowerCase();
-      if (!rawEmail.includes("@")) return alert("Enter a valid email.");
+      emailRaw = document.getElementById("email").value.trim().toLowerCase();
+      if (!emailRaw.includes("@")) return alert("Please enter a valid email.");
 
-      safeEmail = rawEmail.replace(/\./g, "_"); // For Firebase keys
+      emailSafe = emailRaw.replace(/\./g, "_");
 
-      db.ref("users/" + safeEmail).once("value").then(snapshot => {
+      db.ref("users/" + emailSafe).once("value", snapshot => {
         if (snapshot.exists()) {
-          // Show login form
           document.getElementById("email-phase").classList.add("hidden");
-          document.getElementById("password-phase").classList.remove("hidden");
+          document.getElementById("login-phase").classList.remove("hidden");
         } else {
-          // Show signup form
           document.getElementById("email-phase").classList.add("hidden");
           document.getElementById("signup-phase").classList.remove("hidden");
-          document.getElementById("signup-email").value = rawEmail;
+          document.getElementById("signup-email").value = emailRaw;
         }
       });
     }
 
     function login() {
-      const password = document.getElementById("password").value;
+      const pass = document.getElementById("login-password").value;
 
-      db.ref("users/" + safeEmail).once("value").then(snapshot => {
-        const user = snapshot.val();
-        if (user && user.password === password) {
-          localStorage.setItem("user", JSON.stringify(user));
-          window.location.href = "https://abc.xyz";
+      db.ref("users/" + emailSafe).once("value", snapshot => {
+        const data = snapshot.val();
+        if (data && data.password === pass) {
+          localStorage.setItem("user", JSON.stringify(data));
+          window.location.href = "profile.html"; // or use abc.xyz if ready
         } else {
-          alert("Wrong password.");
+          alert("Wrong password");
         }
       });
     }
 
     function signup() {
-      const name = document.getElementById("name").value;
+      const name = document.getElementById("name").value.trim();
       const password = document.getElementById("signup-password").value;
 
       if (!name || !password) {
-        alert("Please fill all fields.");
+        alert("Fill all fields.");
         return;
       }
 
-      const user = {
-        name,
-        email: rawEmail,
-        password
+      const newUser = {
+        name: name,
+        email: emailRaw,
+        password: password
       };
 
-      db.ref("users/" + safeEmail).set(user, () => {
-        localStorage.setItem("user", JSON.stringify(user));
-        window.location.href = "https://abc.xyz";
+      db.ref("users/" + emailSafe).set(newUser, () => {
+        localStorage.setItem("user", JSON.stringify(newUser));
+        window.location.href = "profile.html"; // or abc.xyz
       });
     }
   </script>
