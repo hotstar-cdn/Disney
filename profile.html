@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Your Profile</title>
+  <style>
+    body { font-family: sans-serif; background: #121212; color: white; padding: 40px; }
+    h1 { color: #03dac5; }
+    .info { margin: 10px 0; }
+    button { padding: 10px 20px; border: none; background: #03dac5; color: black; border-radius: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Your Profile</h1>
+  <div class="info"><strong>Name:</strong> <span id="p-name"></span></div>
+  <div class="info"><strong>Email:</strong> <span id="p-email"></span></div>
+  <div class="info"><strong>Password:</strong> <span id="p-pass"></span></div>
+  <br>
+  <button onclick="logout()">Logout</button>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) location.href = "index.html";
+
+    document.getElementById("p-name").innerText = user.name;
+    document.getElementById("p-email").innerText = user.email;
+    document.getElementById("p-pass").innerText = user.password;
+
+    function logout() {
+      localStorage.removeItem("user");
+      location.href = "index.html";
+    }
+  </script>
+</body>
+</html>
