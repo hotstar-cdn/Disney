@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Profile</title>
+  <style id="dynamic-style"></style>
+</head>
+<body>
+  <h2>User Profile</h2>
+  <div id="profile"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+
+    const firebaseConfig = {
+     apiKey: "AIzaSyA-P5EbBSTvzINV8DebaYN3AfsAO4Qt7k8",
+  authDomain: "demo420-c8c7b.firebaseapp.com",
+  databaseURL: "https://demo420-c8c7b-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "demo420-c8c7b",
+  storageBucket: "demo420-c8c7b.firebasestorage.app",
+  messagingSenderId: "76809685599",
+  appId: "1:76809685599:web:a4100117563404e392a9ea",
+  measurementId: "G-LP2KB3BLCW"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    function getQueryParams() {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        uid: params.get("uid"),
+        size: params.get("size") || "16px",
+        color: params.get("color") || "000000"
+      };
+    }
+
+    const { uid, size, color } = getQueryParams();
+
+    const styleTag = document.getElementById("dynamic-style");
+    styleTag.innerHTML = `
+      #profile {
+        font-size: ${size};
+        color: #${color};
+      }
+    `;
+
+    const profileDiv = document.getElementById("profile");
+
+    get(ref(database, 'users/' + uid)).then((snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        profileDiv.innerHTML = `
+          <p><strong>Name:</strong> ${data.name}</p>
+          <p><strong>Email:</strong> ${data.email}</p>
+          <p><strong>Mobile:</strong> ${data.mobile}</p>
+        `;
+      } else {
+        profileDiv.innerHTML = "<p>User not found.</p>";
+      }
+    });
+  </script>
+</body>
+</html>
