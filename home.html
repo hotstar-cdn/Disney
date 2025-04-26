@@ -1,123 +1,163 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Firebase OTP Auth</title>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #121212;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem;
-    }
-    input, button {
-      padding: 10px;
-      margin: 8px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: none;
-    }
-    #nameInput, #nameBtn { display: none; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Authentication</title>
+    <style>
+        /* ... your existing CSS ... */
+    </style>
+
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from "firebase/app";
+      import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+
+      // Your web app's Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyCO-Il5j3zkXwmb4l40KTKbmucOS0EDmo8",
+  authDomain: "otp4dph.firebaseapp.com",
+  projectId: "otp4dph",
+  storageBucket: "otp4dph.firebasestorage.app",
+  messagingSenderId: "454455003784",
+  appId: "1:454455003784:web:cc021623e011059bde2d3d",
+  measurementId: "G-FTRK4E97SQ"
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+
+      // Export auth for use in other modules (if needed)
+      window.auth = auth;
+      window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+      window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+      window.sendEmailVerification = sendEmailVerification;
+    </script>
 </head>
 <body>
-  <h2>Phone OTP Login</h2>
-  <input type="text" id="phoneInput" placeholder="Enter mobile (e.g. +919876543210)" />
-  <div id="recaptcha-container"></div>
-  <button onclick="sendOTP()">Send OTP</button>
+    <div class="container">
+        <div id="login-form">
+            <h2>Login</h2>
+            <div class="form-group">
+                <label for="login-email">Email ID:</label>
+                <input type="email" id="login-email" required>
+            </div>
+            <div class="form-group">
+                <label for="login-password">Password:</label>
+                <input type="password" id="login-password" required>
+            </div>
+            <button onclick="signIn()">Login</button>
+            <p class="error-message" id="login-error"></p>
+            <p class="signup-link" onclick="showSignup()">Don't have an account? Sign up</p>
+        </div>
 
-  <input type="text" id="otpInput" placeholder="Enter OTP" />
-  <button onclick="verifyOTP()">Verify OTP</button>
+        <div id="signup-form" style="display: none;">
+            <h2>Sign Up</h2>
+            <div class="form-group">
+                <label for="signup-name">Name:</label>
+                <input type="text" id="signup-name" required>
+            </div>
+            <div class="form-group">
+                <label for="signup-email">Email ID:</label>
+                <input type="email" id="signup-email" required>
+            </div>
+            <div class="form-group">
+                <label for="signup-password">Password:</label>
+                <input type="password" id="signup-password" required>
+            </div>
+            <button onclick="signUp()">Sign Up</button>
+            <p class="error-message" id="signup-error"></p>
+            <p class="signup-link" onclick="showLogin()">Already have an account? Login</p>
+        </div>
+    </div>
 
-  <input type="text" id="nameInput" placeholder="Enter your name" />
-  <button id="nameBtn" onclick="saveName()">Continue</button>
+    <script>
+        function showSignup() {
+            document.getElementById("login-form").style.display = "none";
+            document.getElementById("signup-form").style.display = "block";
+            document.getElementById("login-error").textContent = "";
+        }
 
-  <script>
-    // Firebase config you provided
-    const firebaseConfig = {
-      apiKey: "AIzaSyCO-Il5j3zkXwmb4l40KTKbmucOS0EDmo8",
-      authDomain: "otp4dph.firebaseapp.com",
-      projectId: "otp4dph",
-      storageBucket: "otp4dph.firebasestorage.app",
-      messagingSenderId: "454455003784",
-      appId: "1:454455003784:web:cc021623e011059bde2d3d",
-      measurementId: "G-FTRK4E97SQ"
-    };
-    
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+        function showLogin() {
+            document.getElementById("signup-form").style.display = "none";
+            document.getElementById("login-form").style.display = "block";
+            document.getElementById("signup-error").textContent = "";
+        }
 
-    let confirmationResult;
-    let phone;
+        async function signUp() {
+            const nameInput = document.getElementById("signup-name");
+            const emailInput = document.getElementById("signup-email");
+            const passwordInput = document.getElementById("signup-password");
+            const signupError = document.getElementById("signup-error");
 
-    window.onload = () => {
-      window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-        'size': 'invisible'
-      });
-    };
+            const name = nameInput.value.trim();
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
 
-    function sendOTP() {
-      phone = document.getElementById("phoneInput").value;
-      if (!phone.startsWith("+")) {
-        alert("Please include country code (e.g., +91)");
-        return;
-      }
+            if (!name || !email || !password) {
+                signupError.textContent = "Please fill in all fields.";
+                return;
+            }
 
-      auth.signInWithPhoneNumber(phone, window.recaptchaVerifier)
-        .then(res => {
-          confirmationResult = res;
-          alert("OTP sent!");
-        })
-        .catch(err => {
-          console.error(err);
-          alert("Error sending OTP: " + err.message);
-        });
-    }
+            try {
+                const userCredential = await window.createUserWithEmailAndPassword(window.auth, email, password);
+                const user = userCredential.user;
+                console.log("User signed up:", user);
+                signupError.textContent = "Account created successfully!";
+                // Optionally, you can update the user's profile with the name:
+                // await user.updateProfile({ displayName: name });
+                setTimeout(() => {
+                    showLogin();
+                }, 1500);
+            } catch (error) {
+                console.error("Error signing up:", error);
+                signupError.textContent = getFirebaseErrorMessage(error.code);
+            }
+        }
 
-    function verifyOTP() {
-      const otp = document.getElementById("otpInput").value;
-      confirmationResult.confirm(otp)
-        .then(async result => {
-          const user = result.user;
-          const userDoc = await db.collection("users").doc(phone).get();
-          if (userDoc.exists) {
-            // Already registered → redirect
-            window.location.href = "https://abc.xyz";
-          } else {
-            // New user → ask for name
-            document.getElementById("nameInput").style.display = "block";
-            document.getElementById("nameBtn").style.display = "inline-block";
-          }
-        })
-        .catch(err => {
-          console.error(err);
-          alert("Incorrect OTP or verification failed.");
-        });
-    }
+        async function signIn() {
+            const emailInput = document.getElementById("login-email");
+            const passwordInput = document.getElementById("login-password");
+            const loginError = document.getElementById("login-error");
 
-    function saveName() {
-      const name = document.getElementById("nameInput").value.trim();
-      if (name === "") {
-        alert("Please enter your name");
-        return;
-      }
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
 
-      db.collection("users").doc(phone).set({ name })
-        .then(() => {
-          alert("Registered successfully!");
-          window.location.href = "https://abc.xyz";
-        })
-        .catch(err => {
-          console.error(err);
-          alert("Error saving name: " + err.message);
-        });
-    }
-  </script>
+            if (!email || !password) {
+                loginError.textContent = "Please enter both email and password.";
+                return;
+            }
+
+            try {
+                const userCredential = await window.signInWithEmailAndPassword(window.auth, email, password);
+                const user = userCredential.user;
+                console.log("User signed in:", user);
+                loginError.textContent = "";
+                window.location.href = "https://abc.xyz";
+            } catch (error) {
+                console.error("Error signing in:", error);
+                loginError.textContent = getFirebaseErrorMessage(error.code);
+            }
+        }
+
+        function getFirebaseErrorMessage(errorCode) {
+            switch (errorCode) {
+                case 'auth/email-already-in-use':
+                    return 'This email is already in use.';
+                case 'auth/invalid-email':
+                    return 'Invalid email address.';
+                case 'auth/user-not-found':
+                    return 'User not found. Please sign up.';
+                case 'auth/wrong-password':
+                    return 'Incorrect password.';
+                case 'auth/weak-password':
+                    return 'Password should be at least 6 characters.';
+                // Add more error codes as needed
+                default:
+                    return 'An error occurred. Please try again.';
+            }
+        }
+    </script>
 </body>
 </html>
