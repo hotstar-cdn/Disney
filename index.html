@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie Previewer</title>
+    <title>Movie 66 Previewer</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -17,18 +17,23 @@
             padding: 20px;
         }
         .poster {
-            width: 80%;
-            max-width: 400px;
+            width: 100%;
+            max-width: 600px;
             height: auto;
             border-radius: 10px;
         }
         .logo {
             max-height: 50px;
+            margin: 20px 0;
+        }
+        .genres, .tags {
+            font-size: 18px;
+            font-weight: bold;
         }
         .button {
             display: inline-block;
             padding: 10px 20px;
-            margin: 10px;
+            margin: 15px;
             border: none;
             border-radius: 5px;
             background-color: #ff9800;
@@ -40,16 +45,20 @@
         .button:hover {
             background-color: #e68a00;
         }
+        .description {
+            font-size: 16px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <img id="logo" class="logo" src="" alt="Logo">
-        <h1 id="name"></h1>
         <img id="poster" class="poster" src="" alt="Poster">
-        <p id="description"></p>
-        <p id="genres"></p>
+        <img id="logo" class="logo" src="" alt="Logo">
+        <p id="genres" class="genres"></p>
+        <p id="tags" class="tags"></p>
         <a id="redirect" class="button" href="" target="_blank">Watch Now</a>
+        <p id="description" class="description"></p>
     </div>
 
     <script type="module">
@@ -81,14 +90,14 @@
 
             if (docSnap.exists()) {
                 const movie = docSnap.data();
-                document.getElementById("name").textContent = movie.Name;
-                document.getElementById("description").textContent = movie.description;
-                document.getElementById("genres").textContent = "Genre: " + movie.genres;
                 document.getElementById("poster").src = movie.posterUrl;
                 document.getElementById("logo").src = movie.logoUrl;
+                document.getElementById("genres").textContent = "Genre: " + movie.genres;
+                document.getElementById("tags").textContent = "Tags: " + movie.tags;
                 document.getElementById("redirect").href = movie.redirectUrl;
+                document.getElementById("description").textContent = movie.description;
             } else {
-                document.getElementById("name").textContent = "Movie not found!";
+                document.getElementById("description").textContent = "Movie not found!";
             }
         }
 
