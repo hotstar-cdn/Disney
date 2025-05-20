@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Previewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #1c1c1c;
+            color: white;
+        }
+        .container {
+            width: 90%;
+            margin: auto;
+            padding: 20px;
+        }
+        .poster {
+            width: 80%;
+            max-width: 400px;
+            height: auto;
+            border-radius: 10px;
+        }
+        .logo {
+            max-height: 50px;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #ff9800;
+            color: white;
+            font-size: 16px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #e68a00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img id="logo" class="logo" src="" alt="Logo">
+        <h1 id="name"></h1>
+        <img id="poster" class="poster" src="" alt="Poster">
+        <p id="description"></p>
+        <p id="genres"></p>
+        <a id="redirect" class="button" href="" target="_blank">Watch Now</a>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBROgYUR-2rakUxHbl90JlynP_X3f0GxIM",
+            authDomain: "diseny-plus-hotstar-database.firebaseapp.com",
+            projectId: "diseny-plus-hotstar-database",
+            storageBucket: "diseny-plus-hotstar-database.firebasestorage.app",
+            messagingSenderId: "582861150339",
+            appId: "1:582861150339:web:0d2b69a2ae914342b723b6",
+            measurementId: "G-HX223WNVKE"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Extract code from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const movieCode = urlParams.get("code");
+
+        async function fetchMovieDetails(code) {
+            if (!code) return;
+
+            const docRef = doc(db, "movies", code);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const movie = docSnap.data();
+                document.getElementById("name").textContent = movie.Name;
+                document.getElementById("description").textContent = movie.description;
+                document.getElementById("genres").textContent = "Genre: " + movie.genres;
+                document.getElementById("poster").src = movie.posterUrl;
+                document.getElementById("logo").src = movie.logoUrl;
+                document.getElementById("redirect").href = movie.redirectUrl;
+            } else {
+                document.getElementById("name").textContent = "Movie not found!";
+            }
+        }
+
+        fetchMovieDetails(movieCode);
+    </script>
+</body>
+</html>
