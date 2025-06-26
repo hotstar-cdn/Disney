@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student - View Classes</title>
+  <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+  <style>
+    body { font-family: Arial, sans-serif; background: #eef2f3; padding: 20px; }
+    .swiper-container { padding: 20px 0; }
+    .swiper-slide { width: 300px !important; }
+    .class-card { background: #fff; border-radius: 20px; padding: 20px; margin: 15px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); position: relative; width: 280px; }
+    .status-tag { position: absolute; top: -10px; left: 20px; background: #dfefff; color: #0066cc; padding: 5px 12px; font-weight: bold; border-radius: 10px; font-size: 14px; }
+    .status-tag.live { background: #d4f7d4; color: #006600; }
+    .class-card h3 { font-size: 18px; font-weight: bold; margin: 30px 0 10px; }
+    .info-row { display: flex; justify-content: space-between; font-size: 14px; color: #333; margin-bottom: 8px; }
+    .window { font-size: 14px; color: #555; margin-bottom: 16px; }
+    .outlined-btn { background: transparent; border: 2px solid #0066cc; color: #0066cc; padding: 10px 16px; border-radius: 25px; font-weight: bold; cursor: pointer; width: 100%; transition: .3s; }
+    .outlined-btn:hover { background: #0066cc; color: #fff; }
+    .join-btn { background: #006600; border-color: #006600; color: #fff; }
+  </style>
+</head>
+<body>
+
+<h2>Student Panel - Available Classes</h2>
+<div class="swiper-container"><div class="swiper-wrapper" id="classList"></div></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCbnM2-F_MgLKFm6qt4zAOQ8czPzQY0Koc",
+    authDomain: "edulearn-live-class-datasets.firebaseapp.com",
+    projectId: "edulearn-live-class-datasets",
+    storageBucket: "edulearn-live-class-datasets.firebasestorage.app",
+    messagingSenderId: "599551118203",
+    appId: "1:599551118203:web:0cfbde334243d3742dcbde",
+    measurementId: "G-JNZSP50J5N"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const classLinks = {
+    6: "https://meet.google.com/amf-mqim-buc",
+    7: "https://meet.google.com/jgi-dvhg-fuz",
+    8: "https://meet.google.com/gzi-obdg-oof",
+    9: "https://meet.google.com/mgz-qfbe-rzg",
+    10: "https://meet.google.com/tkk-npnb-sgm",
+    "11NEET": "https://meet.google.com/uia-pzmj-qvq",
+    "11JEE": "https://meet.google.com/asi-zwyg-zto",
+    "12NEET": "https://meet.google.com/dbx-azvv-qon",
+    "12JEE": "https://meet.google.com/xxv-uoir-rio"
+  };
+
+  function fmtDate(d){return new Date(d).toLocaleDateString(undefined,{day:'numeric',month:'long'});}
+  function fmtTime(a,b){return new Date(a).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit',hour12:true}) + ' – ' + new Date(b).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit',hour12:true});}
+
+  async function loadClasses(){
+    const params = new URLSearchParams(window.location.search);
+    const filter = params.get('');
+    const now = new Date();
+    const snap = await db.collection("classes").orderBy("startTime").get();
+    const wrapper = document.getElementById('classList');
+    wrapper.innerHTML = '';
+
+    snap.forEach(doc=>{
+      const d = doc.data(), s=new Date(d.startTime), e=new Date(d.expireTime);
+      if(filter && d.classLevel!==filter) return;
+      const isLive = now>=s && now<=e;
+      const willRedirect = !isLive && s-now<=60000 && s-now>0;
+      if(now>e){
+        // move to history
+        db.collection('history').add({...d, endedAt: now});
+        db.collection('classes').doc(doc.id).delete();
+        return;
+      }
+
+      const btn = willRedirect
+        ? `<button class="outlined-btn join-btn">Redirecting in 5s…</button><script>setTimeout(()=>location.href="${classLinks[d.classLevel]}",5000)</script>`
+        : isLive
+          ? `<a href="${classLinks[d.classLevel]}" target="_blank"><button class="outlined-btn join-btn">Join Now</button></a>`
+          : `<button class="outlined-btn">shaduled class</button>`;
+
+      wrapper.innerHTML += `
+        <div class="swiper-slide"><div class="class-card">
+          <div class="status-tag ${isLive?'live':''}">${isLive?'LIVE':'UPCOMING'}</div>
+          <h3>${d.title}</h3>
+          <div class="info-row"><span>📅 ${fmtDate(s)}</span><span>⏱️ ${d.duration} Minutes</span></div>
+          <div class="window">Test Window ${fmtTime(s,e)}</div>
+          ${btn}
+        </div></div>`;
+    });
+
+    new Swiper('.swiper-container',{slidesPerView:1.2,spaceBetween:20,freeMode:true});
+  }
+
+  loadClasses();
+  setInterval(loadClasses, 30000);
+</script>
+</body>
+</html>
