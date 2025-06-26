@@ -1,107 +1,65 @@
+<!-- teacher.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie 66 Previewer</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #1c1c1c;
-            color: white;
-        }
-        .container {
-            width: 90%;
-            margin: auto;
-            padding: 20px;
-        }
-        .poster {
-            width: 100%;
-            max-width: 600px;
-            height: auto;
-            border-radius: 10px;
-        }
-        .logo {
-            max-height: 50px;
-            margin: 20px 0;
-        }
-        .genres, .tags {
-            font-size: 18px;
-            font-weight: bold;
-        }
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            margin: 15px;
-            border: none;
-            border-radius: 5px;
-            background-color: #ff9800;
-            color: white;
-            font-size: 16px;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .button:hover {
-            background-color: #e68a00;
-        }
-        .description {
-            font-size: 16px;
-            margin-top: 10px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Teacher - Schedule Class</title>
+  <style>
+    body { font-family: Arial; background: #f9f9f9; padding: 20px; }
+    form { max-width: 400px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    input, select, button { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <img id="poster" class="poster" src="" alt="Poster">
-        <img id="logo" class="logo" src="" alt="Logo">
-        <p id="genres" class="genres"></p>
-        <p id="tags" class="tags"></p>
-        <a id="redirect" class="button" href="" target="_blank">Watch Now</a>
-        <p id="description" class="description"></p>
-    </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.8.0/firebase-firestore.js";
+<h2>Teacher Panel - Schedule a Class</h2>
+<form id="classForm">
+  <input type="text" id="title" placeholder="Title" required />
+  <input type="text" id="subject" placeholder="Subject" required />
+  <select id="classLevel" required>
+    <option value="">Select Class</option>
+    <option value="6">6</option><option value="7">7</option><option value="8">8</option>
+    <option value="9">9</option><option value="10">10</option>
+    <option value="11NEET">11 NEET</option><option value="11JEE">11 JEE</option>
+    <option value="12NEET">12 NEET</option><option value="12JEE">12 JEE</option>
+  </select>
+  <label>Start Time:</label>
+  <input type="datetime-local" id="startTime" required />
+  <label>Expire Time:</label>
+  <input type="datetime-local" id="expireTime" required />
+  <button type="submit">Schedule Class</button>
+</form>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBROgYUR-2rakUxHbl90JlynP_X3f0GxIM",
-            authDomain: "diseny-plus-hotstar-database.firebaseapp.com",
-            projectId: "diseny-plus-hotstar-database",
-            storageBucket: "diseny-plus-hotstar-database.firebasestorage.app",
-            messagingSenderId: "582861150339",
-            appId: "1:582861150339:web:0d2b69a2ae914342b723b6",
-            measurementId: "G-HX223WNVKE"
-        };
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCbnM2-F_MgLKFm6qt4zAOQ8czPzQY0Koc",
+    authDomain: "edulearn-live-class-datasets.firebaseapp.com",
+    projectId: "edulearn-live-class-datasets",
+    storageBucket: "edulearn-live-class-datasets.firebasestorage.app",
+    messagingSenderId: "599551118203",
+    appId: "1:599551118203:web:0cfbde334243d3742dcbde",
+    measurementId: "G-JNZSP50J5N"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+  document.getElementById("classForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const title = document.getElementById("title").value;
+    const subject = document.getElementById("subject").value;
+    const classLevel = document.getElementById("classLevel").value;
+    const startTime = new Date(document.getElementById("startTime").value);
+    const expireTime = new Date(document.getElementById("expireTime").value);
+    const duration = Math.floor((expireTime - startTime) / 60000); // in minutes
 
-        // Extract code from URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const movieCode = urlParams.get("code");
-
-        async function fetchMovieDetails(code) {
-            if (!code) return;
-
-            const docRef = doc(db, "movies", code);
-            const docSnap = await getDoc(docRef);
-
-            if (docSnap.exists()) {
-                const movie = docSnap.data();
-                document.getElementById("poster").src = movie.posterUrl;
-                document.getElementById("logo").src = movie.logoUrl;
-                document.getElementById("genres").textContent = "Genre: " + movie.genres;
-                document.getElementById("tags").textContent = "Tags: " + movie.tags;
-                document.getElementById("redirect").href = movie.redirectUrl;
-                document.getElementById("description").textContent = movie.description;
-            } else {
-                document.getElementById("description").textContent = "Movie not found!";
-            }
-        }
-
-        fetchMovieDetails(movieCode);
-    </script>
+    await db.collection("classes").add({ title, subject, classLevel, startTime, expireTime, duration });
+    alert("Class Scheduled!");
+    document.getElementById("classForm").reset();
+  });
+</script>
 </body>
 </html>
