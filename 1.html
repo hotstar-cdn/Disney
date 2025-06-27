@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Student View Classes</title>
+  <title>Live Class Viewer</title>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-4 text-sm">
-  <h2 class="text-xl font-bold mb-4">Live & Scheduled Classes</h2>
-  <div id="classContainer" class="flex space-x-4 overflow-x-auto"></div>
+<body class="bg-gray-100 p-4">
+  <h2 class="text-xl font-semibold mb-4">Live Class Carousel</h2>
+  <div id="classContainer" class="flex gap-4 overflow-x-auto pb-4"></div>
 
   <script>
     const firebaseConfig = {
@@ -49,46 +49,51 @@
     const urlParams = new URLSearchParams(window.location.search);
     const classFilter = urlParams.get("class");
 
-    db.collection("classes").orderBy("startTime").onSnapshot(snapshot => {
-      const container = document.getElementById("classContainer");
-      container.innerHTML = "";
+    function renderClassCard(id, data, now) {
+      const start = data.startTime.toDate();
+      const end = data.endTime.toDate();
+      const isLive = now >= start && now <= end;
+      const isExpired = now > end;
+      if (isExpired) {
+        db.collection("classes").doc(id).delete();
+        return null;
+      }
 
-      const now = new Date();
+      const minsUntil = Math.ceil((start - now) / 60000);
+      const minsAgo = Math.floor((now - start) / 60000);
+      const image = subjectImages[data.subject] || "";
+      const joinUrl = joinLinks[data.classGroup] || "#";
 
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        if (classFilter && data.classGroup !== classFilter) return;
-
-        const start = data.startTime.toDate();
-        const end = data.endTime.toDate();
-
-        const isLive = now >= start && now <= end;
-        const hasExpired = now > end;
-        if (hasExpired) return; // skip expired
-
-        const minsAgo = Math.floor((now - start) / 60000);
-        const minsLater = Math.ceil((start - now) / 60000);
-
-        const card = document.createElement("div");
-        card.className = "w-[150px] bg-white rounded shadow p-2 flex-shrink-0 relative";
-
-        card.innerHTML = `
-          <div class="absolute top-2 left-2 bg-gray-800 text-white text-[10px] px-1 py-0.5 rounded">${data.subject.toUpperCase()}</div>
-          ${isLive ? `<div class="absolute top-2 right-2 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded">LIVE</div>` : ""}
-          <img src="${subjectImages[data.subject]}" alt="${data.subject}" class="w-full h-20 object-cover rounded mt-4 mb-2">
-          <div class="font-bold text-sm truncate">${data.title}</div>
-          <div class="text-xs text-gray-600 mb-1">Topic 1</div>
-          <div class="text-[11px] text-red-600 flex items-center mb-2">
-            <span>⏱️ ${isLive ? `Started ${minsAgo} mins ago` : `Starts in ${minsLater} mins`}</span>
+      return `
+        <div class="w-[330px] bg-white rounded-lg shadow relative p-4 flex-shrink-0">
+          <div class="absolute top-2 left-2 bg-gray-700 text-white text-xs px-2 py-[2px] rounded">${data.subject.toUpperCase()}</div>
+          ${isLive ? `<div class="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-[2px] rounded">LIVE</div>` : ""}
+          <img src="${image}" class="w-full h-40 object-cover rounded mt-6 mb-3" />
+          <div class="font-bold text-lg truncate">${data.title}</div>
+          <div class="text-sm text-gray-600 mb-2">${data.topic || 'Topic'}</div>
+          <div class="text-sm text-red-600 mb-3">
+            ⏱️ ${isLive ? `Started ${minsAgo} mins ago` : `Starts in ${minsUntil} mins`}
           </div>
-          <a href="${joinLinks[data.classGroup]}" target="_blank">
-            <button class="w-full text-center border border-black text-black py-1 rounded hover:bg-black hover:text-white text-xs">
+          <a href="${joinUrl}" target="_blank">
+            <button class="w-full border border-black py-2 rounded text-sm font-semibold hover:bg-black hover:text-white transition">
               ${isLive ? "Join Now" : "Scheduled"}
             </button>
           </a>
-        `;
+        </div>
+      `;
+    }
 
-        container.appendChild(card);
+    db.collection("classes").onSnapshot(snapshot => {
+      const container = document.getElementById("classContainer");
+      const now = new Date();
+      container.innerHTML = "";
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (classFilter && classFilter !== data.classGroup) return;
+
+        const cardHtml = renderClassCard(doc.id, data, now);
+        if (cardHtml) container.innerHTML += cardHtml;
       });
     });
   </script>
