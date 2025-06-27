@@ -6,6 +6,15 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .glass {
+      backdrop-filter: blur(6px);
+      background-color: rgba(0, 0, 0, 0.4);
+    }
+    .pill-button {
+      border-radius: 100px !important;
+    }
+  </style>
 </head>
 <body class="bg-gray-100 p-4">
   <h2 class="text-xl font-semibold mb-4">Live Class Carousel</h2>
@@ -68,7 +77,9 @@
         <div class="w-[330px] bg-white rounded-lg shadow flex-shrink-0 overflow-hidden">
           <div class="relative">
             <img src="${image}" class="w-full h-44 object-cover rounded-t-lg" />
-            <div class="absolute top-2 left-2 bg-gray-800 text-white text-xs px-2 py-[2px] rounded">${data.subject.toUpperCase()}</div>
+            <div class="absolute top-2 left-2 glass text-white text-xs px-2 py-[2px] rounded">
+              ${data.subject.toUpperCase()}
+            </div>
             ${isLive ? `<div class="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-[2px] rounded">LIVE</div>` : ""}
           </div>
           <div class="p-4">
@@ -78,7 +89,7 @@
               ⏱️ ${isLive ? `Started ${minsAgo} mins ago` : `Starts in ${minsUntil} mins`}
             </div>
             <a href="${joinUrl}" target="_blank">
-              <button class="w-full border border-black py-2 rounded text-sm font-semibold hover:bg-black hover:text-white transition">
+              <button class="w-full border border-black py-2 font-semibold text-sm pill-button hover:bg-black hover:text-white transition">
                 ${isLive ? "Join Now" : "Scheduled"}
               </button>
             </a>
