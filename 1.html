@@ -1,97 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Teacher | Schedule Class</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f2f4f7;
-      display: flex;
-      justify-content: center;
-      padding: 30px 10px;
-    }
-    form {
-      background: white;
-      padding: 25px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      max-width: 400px;
-      width: 100%;
-    }
-    h2 {
-      text-align: center;
-      color: #1976d2;
-      margin-bottom: 20px;
-    }
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: bold;
-    }
-    input, select {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-sizing: border-box;
-    }
-    button {
-      margin-top: 20px;
-      width: 100%;
-      padding: 10px;
-      background: #1976d2;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #155a9c;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <title>Student View Classes</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <form id="scheduleForm">
-    <h2>Schedule Class</h2>
-    <label for="class">Class</label>
-    <select id="class" required>
-      <option value="">-- Select Class --</option>
-      <option value="6">6</option>
-      <option value="7">7</option>
-      <option value="8">8</option>
-      <option value="9">9</option>
-      <option value="10">10</option>
-      <option value="11NEET">11 NEET</option>
-      <option value="11JEE">11 JEE</option>
-      <option value="12NEET">12 NEET</option>
-      <option value="12JEE">12 JEE</option>
-    </select>
-    <label for="subject">Subject</label>
-    <select id="subject" required>
-      <option value="">-- Select Subject --</option>
-      <option value="English">English</option>
-      <option value="SST">SST</option>
-      <option value="Botany">Botany</option>
-      <option value="Zoology">Zoology</option>
-      <option value="Maths">Maths</option>
-      <option value="Physics">Physics</option>
-      <option value="Chemistry">Chemistry</option>
-    </select>
-    <label for="title">Title</label>
-    <input type="text" id="title" placeholder="Class Title" required />
-    <label for="start">Start Time</label>
-    <input type="datetime-local" id="start" required />
-    <label for="end">End Time</label>
-    <input type="datetime-local" id="end" required />
-    <button type="submit">Schedule</button>
-  </form>
+<body class="bg-gray-100 p-4 text-sm">
+  <h2 class="text-xl font-bold mb-4">Live & Scheduled Classes</h2>
+  <div id="classContainer" class="flex space-x-4 overflow-x-auto"></div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCbnM2-F_MgLKFm6qt4zAOQ8czPzQY0Koc",
@@ -99,28 +18,78 @@
       projectId: "edulearn-live-class-datasets",
       storageBucket: "edulearn-live-class-datasets.firebasestorage.app",
       messagingSenderId: "599551118203",
-      appId: "1:599551118203:web:0cfbde334243d3742dcbde"
+      appId: "1:599551118203:web:0cfbde334243d3742dcbde",
+      measurementId: "G-JNZSP50J5N"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    document.getElementById('scheduleForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      const cls = document.getElementById('class').value;
-      const subject = document.getElementById('subject').value;
-      const title = document.getElementById('title').value;
-      const start = new Date(document.getElementById('start').value);
-      const end = new Date(document.getElementById('end').value);
-      if (end <= start) return alert('End must be after start');
-      await db.collection('classes').add({
-        class: cls,
-        subject,
-        title,
-        start: firebase.firestore.Timestamp.fromDate(start),
-        end: firebase.firestore.Timestamp.fromDate(end)
+    const subjectImages = {
+      botany: "https://thumbnail.allen.in/7730c962-e6ba-404f-9d68-90f29cb6895e/original.webp",
+      zoology: "https://thumbnail.allen.in/77a7f5fd-b472-40e2-bdf2-eeb6d7fd448a/original.webp",
+      physics: "https://thumbnail.allen.in/44b3e41c-605c-42f9-87c0-8b39914bf61f/original.webp",
+      chemistry: "https://thumbnail.allen.in/f4db4125-88e0-4af2-abec-246ad873d39b/original.webp",
+      maths: "https://thumbnail.allen.in/5219a374-8571-4b38-8dc5-d7e4511dac1b/original.webp",
+      english: "https://thumbnail.allen.in/f99e56bd-fa3b-439a-af39-27a1f575e93b/original.webp",
+      sst: "https://thumbnail.allen.in/36818f58-76c9-4dfe-a979-3a529d0b4d3e/original.webp"
+    };
+
+    const joinLinks = {
+      "6": "https://meet.google.com/amf-mqim-buc",
+      "7": "https://meet.google.com/jgi-dvhg-fuz",
+      "8": "https://meet.google.com/gzi-obdg-oof",
+      "9": "https://meet.google.com/mgz-qfbe-rzg",
+      "10": "https://meet.google.com/tkk-npnb-sgm",
+      "11NEET": "https://meet.google.com/uia-pzmj-qvq",
+      "11JEE": "https://meet.google.com/asi-zwyg-zto",
+      "12NEET": "https://meet.google.com/dbx-azvv-qon",
+      "12JEE": "https://meet.google.com/xxv-uoir-rio"
+    };
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const classFilter = urlParams.get("class");
+
+    db.collection("classes").orderBy("startTime").onSnapshot(snapshot => {
+      const container = document.getElementById("classContainer");
+      container.innerHTML = "";
+
+      const now = new Date();
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (classFilter && data.classGroup !== classFilter) return;
+
+        const start = data.startTime.toDate();
+        const end = data.endTime.toDate();
+
+        const isLive = now >= start && now <= end;
+        const hasExpired = now > end;
+        if (hasExpired) return; // skip expired
+
+        const minsAgo = Math.floor((now - start) / 60000);
+        const minsLater = Math.ceil((start - now) / 60000);
+
+        const card = document.createElement("div");
+        card.className = "w-[150px] bg-white rounded shadow p-2 flex-shrink-0 relative";
+
+        card.innerHTML = `
+          <div class="absolute top-2 left-2 bg-gray-800 text-white text-[10px] px-1 py-0.5 rounded">${data.subject.toUpperCase()}</div>
+          ${isLive ? `<div class="absolute top-2 right-2 bg-red-500 text-white text-[10px] px-1 py-0.5 rounded">LIVE</div>` : ""}
+          <img src="${subjectImages[data.subject]}" alt="${data.subject}" class="w-full h-20 object-cover rounded mt-4 mb-2">
+          <div class="font-bold text-sm truncate">${data.title}</div>
+          <div class="text-xs text-gray-600 mb-1">Topic 1</div>
+          <div class="text-[11px] text-red-600 flex items-center mb-2">
+            <span>⏱️ ${isLive ? `Started ${minsAgo} mins ago` : `Starts in ${minsLater} mins`}</span>
+          </div>
+          <a href="${joinLinks[data.classGroup]}" target="_blank">
+            <button class="w-full text-center border border-black text-black py-1 rounded hover:bg-black hover:text-white text-xs">
+              ${isLive ? "Join Now" : "Scheduled"}
+            </button>
+          </a>
+        `;
+
+        container.appendChild(card);
       });
-      alert('Class scheduled!');
-      e.target.reset();
     });
   </script>
 </body>
