@@ -2,49 +2,134 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Clean PDF Viewer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background-color: #f9f9f9;
-      font-family: sans-serif;
-    }
-
-    .error {
-      text-align: center;
-      margin-top: 40px;
-      color: #c00;
-      font-size: 18px;
-    }
-
-    iframe {
-      width: 100%;
-      height: 100vh;
-      border: none;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Teacher | Create Test</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-gray-50 font-sans">
+  <div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r p-4">
+      <h2 class="text-xl font-semibold mb-4">All Classes</h2>
+      <ul class="space-y-2">
+        <li><button class="w-full text-left px-4 py-2 rounded hover:bg-gray-100">Class 6</button></li>
+        <li><button class="w-full text-left px-4 py-2 rounded hover:bg-gray-100">Class 7</button></li>
+        <li><button class="w-full text-left px-4 py-2 rounded hover:bg-gray-100">Class 8</button></li>
+        <li><button class="w-full text-left px-4 py-2 rounded bg-gray-800 text-white">Class 9</button></li>
+        <li><button class="w-full text-left px-4 py-2 rounded hover:bg-gray-100">Class 10</button></li>
+      </ul>
+    </aside>
 
-<script>
-  const params = new URLSearchParams(window.location.search);
-  const pdfUrl = params.get("pdf");
+    <!-- Main Content -->
+    <main class="flex-1 p-8">
+      <h1 class="text-2xl font-bold mb-6">🧑‍🏫 Create New Test</h1>
+      <div class="bg-white p-6 rounded shadow-md max-w-3xl">
+        <label class="block font-semibold mb-1">Test Title</label>
+        <input id="testTitle" type="text" placeholder="Enter test title" class="w-full p-2 border rounded mb-4" />
 
-  if (!pdfUrl || !pdfUrl.endsWith(".pdf")) {
-    document.body.innerHTML = `<div class="error">
-      ❌ Invalid or missing PDF URL.<br>
-      Use: <code>?pdf=https://example.com/file.pdf</code>
-    </div>`;
-  } else {
-    const viewerURL = `pdfjs/web/viewer.html?file=${encodeURIComponent(pdfUrl)}`;
-    const iframe = document.createElement("iframe");
-    iframe.src = viewerURL;
-    document.body.appendChild(iframe);
-  }
-</script>
+        <label class="block font-semibold mb-1">Subject</label>
+        <input id="subject" type="text" placeholder="e.g., Mathematics" class="w-full p-2 border rounded mb-6" />
 
+        <!-- Question Area -->
+        <div id="questionsArea" class="space-y-6"></div>
+
+        <button onclick="addQuestion()" class="mt-4 mb-6 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+          ➕ Add Question
+        </button>
+
+        <div class="flex gap-4">
+          <button onclick="createTest()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">✅ Submit Test</button>
+          <button onclick="location.reload()" class="border px-4 py-2 rounded">Cancel</button>
+        </div>
+
+        <div id="shareLink" class="mt-6 text-green-600 font-semibold"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Firebase + Logic -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBbnQDX_jTM_oKskHvDesa_-VVwKswVOnw",
+      authDomain: "xperts-test.firebaseapp.com",
+      projectId: "xperts-test",
+      storageBucket: "xperts-test.firebasestorage.app",
+      messagingSenderId: "766906534034",
+      appId: "1:766906534034:web:d660184683d9e127de7e4b",
+      measurementId: "G-6RTWFZ9YB4"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let questionCount = 0;
+
+    function addQuestion() {
+      questionCount++;
+      const container = document.createElement("div");
+      container.className = "border p-4 rounded bg-gray-50";
+
+      container.innerHTML = `
+        <h3 class="font-bold mb-2">Question ${questionCount}</h3>
+        <input type="text" placeholder="Question text" class="question w-full p-2 border rounded mb-2"/>
+        <input type="text" placeholder="Option A" class="optionA w-full p-2 border rounded mb-2"/>
+        <input type="text" placeholder="Option B" class="optionB w-full p-2 border rounded mb-2"/>
+        <input type="text" placeholder="Option C" class="optionC w-full p-2 border rounded mb-2"/>
+        <input type="text" placeholder="Correct Answer (A/B/C)" class="correct w-full p-2 border rounded mb-2"/>
+      `;
+
+      document.getElementById("questionsArea").appendChild(container);
+    }
+
+    async function createTest() {
+      const title = document.getElementById("testTitle").value.trim();
+      const subject = document.getElementById("subject").value.trim();
+      const containers = document.querySelectorAll("#questionsArea > div");
+
+      if (!title || !subject || containers.length === 0) {
+        alert("Please fill in all fields and add at least one question.");
+        return;
+      }
+
+      const questions = [];
+
+      containers.forEach(container => {
+        const question = container.querySelector(".question").value.trim();
+        const a = container.querySelector(".optionA").value.trim();
+        const b = container.querySelector(".optionB").value.trim();
+        const c = container.querySelector(".optionC").value.trim();
+        const correct = container.querySelector(".correct").value.trim();
+
+        if (question && a && b && c && correct) {
+          questions.push({
+            question,
+            options: [a, b, c],
+            correct
+          });
+        }
+      });
+
+      if (questions.length === 0) {
+        alert("Please complete all question fields.");
+        return;
+      }
+
+      try {
+        const docRef = await addDoc(collection(db, "tests"), {
+          title, subject, questions
+        });
+        document.getElementById("shareLink").innerText = `✅ Share this link with students: 2.html?testId=${docRef.id}`;
+      } catch (e) {
+        alert("Failed to save test.");
+        console.error(e);
+      }
+    }
+
+    // Add one default question on load
+    addQuestion();
+  </script>
 </body>
 </html>
