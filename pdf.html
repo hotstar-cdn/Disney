@@ -3,34 +3,77 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Adobe Acrobat PDF Viewer</title>
+  <title>Document Viewer</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
+      padding: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
     }
-    .container {
+
+    .viewer-wrapper {
+      background: white;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 900px;
+      overflow: hidden;
       padding: 20px;
+    }
+
+    .viewer-header {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      text-align: center;
+      color: #333;
+    }
+
+    iframe {
+      width: 100%;
+      height: 70vh;
+      border: none;
+      border-radius: 8px;
+    }
+
+    .error {
+      color: #d8000c;
+      background-color: #ffd2d2;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 16px;
       text-align: center;
     }
-    iframe {
-      width: 90%;
-      height: 90vh;
-      border: none;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-      background: #fff;
-    }
-    .error {
-      color: red;
-      font-size: 18px;
-      margin-top: 20px;
+
+    @media (max-width: 600px) {
+      .viewer-wrapper {
+        padding: 15px;
+      }
+
+      .viewer-header {
+        font-size: 18px;
+      }
+
+      iframe {
+        height: 60vh;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container" id="viewer-container">
-    <div class="error" id="error"></div>
+
+  <div class="viewer-wrapper" id="viewer-container">
+    <div class="viewer-header">Document Viewer</div>
+    <div class="error" id="error" style="display: none;"></div>
   </div>
 
   <script>
@@ -54,11 +97,15 @@
       const iframe = document.createElement("iframe");
       iframe.src = pdfUrl;
       iframe.allow = "fullscreen";
+
       document.getElementById("viewer-container").appendChild(iframe);
     } else {
-      document.getElementById("error").textContent =
-        "Invalid or missing PDF URL. Use ?pdf=<Adobe_Acrobat_Link> in the address.";
+      const errorBox = document.getElementById("error");
+      errorBox.style.display = "block";
+      errorBox.textContent =
+        "Missing or invalid PDF URL. Please provide a valid Adobe Acrobat document link using ?pdf=<url>.";
     }
   </script>
+
 </body>
 </html>
