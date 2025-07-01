@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Adobe Acrobat PDF Viewer</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+    }
+    .container {
+      padding: 20px;
+      text-align: center;
+    }
+    iframe {
+      width: 90%;
+      height: 90vh;
+      border: none;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      background: #fff;
+    }
+    .error {
+      color: red;
+      font-size: 18px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="viewer-container">
+    <div class="error" id="error"></div>
+  </div>
+
+  <script>
+    function getPDFUrlParam() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get("pdf");
+    }
+
+    function isValidURL(str) {
+      try {
+        const url = new URL(str);
+        return url.protocol === "http:" || url.protocol === "https:";
+      } catch (_) {
+        return false;
+      }
+    }
+
+    const pdfUrl = getPDFUrlParam();
+
+    if (pdfUrl && isValidURL(pdfUrl)) {
+      const iframe = document.createElement("iframe");
+      iframe.src = pdfUrl;
+      iframe.allow = "fullscreen";
+      document.getElementById("viewer-container").appendChild(iframe);
+    } else {
+      document.getElementById("error").textContent =
+        "Invalid or missing PDF URL. Use ?pdf=<Adobe_Acrobat_Link> in the address.";
+    }
+  </script>
+</body>
+</html>
