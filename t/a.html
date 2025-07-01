@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Teacher | Create Test</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+  <div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r p-4">
+      <h2 class="text-xl font-semibold mb-4">All Classes</h2>
+      <ul class="space-y-2">
+        <li><button class="w-full text-left px-4 py-2 rounded hover:bg-gray-100">Class 6</button></li>
+        <li><button class="w-full text-left px-4 py-2 rounded hover:bg-gray-100">Class 7</button></li>
+        <li><button class="w-full text-left px-4 py-2 rounded hover:bg-gray-100">Class 8</button></li>
+        <li><button class="w-full text-left px-4 py-2 rounded bg-gray-800 text-white">Class 9</button></li>
+        <li><button class="w-full text-left px-4 py-2 rounded hover:bg-gray-100">Class 10</button></li>
+        <li><button class="w-full text-left px-4 py-2 rounded hover:bg-gray-100">Class 11 JEE</button></li>
+        <li><button class="w-full text-left px-4 py-2 rounded hover:bg-gray-100">Class 11 NEET</button></li>
+        <li><button class="w-full text-left px-4 py-2 rounded hover:bg-gray-100">Class 12 JEE</button></li>
+        <li><button class="w-full text-left px-4 py-2 rounded hover:bg-gray-100">Class 12 NEET</button></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-8">
+      <h1 class="text-2xl font-bold mb-6">Upload New Test</h1>
+      <div class="bg-white p-6 rounded shadow-md max-w-2xl">
+        <label class="block mb-2 font-medium">Test Title *</label>
+        <input id="testTitle" type="text" placeholder="Enter test title" class="w-full p-2 border rounded mb-4" />
+
+        <label class="block mb-2 font-medium">Subject *</label>
+        <input id="subject" type="text" placeholder="e.g., Mathematics, Physics" class="w-full p-2 border rounded mb-4" />
+
+        <label class="block mb-2 font-medium">Questions *</label>
+        <textarea id="questions" rows="5" placeholder="Q|OptionA|OptionB|OptionC|CorrectAnswer (one per line)" class="w-full p-2 border rounded mb-4"></textarea>
+
+        <div class="flex space-x-4">
+          <button onclick="createTest()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Upload Test</button>
+          <button onclick="location.reload()" class="border px-4 py-2 rounded">Cancel</button>
+        </div>
+
+        <div id="shareLink" class="mt-6 text-green-600 font-semibold"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Firebase Setup & Logic -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBbnQDX_jTM_oKskHvDesa_-VVwKswVOnw",
+      authDomain: "xperts-test.firebaseapp.com",
+      projectId: "xperts-test",
+      storageBucket: "xperts-test.firebasestorage.app",
+      messagingSenderId: "766906534034",
+      appId: "1:766906534034:web:d660184683d9e127de7e4b",
+      measurementId: "G-6RTWFZ9YB4"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function createTest() {
+      const title = document.getElementById("testTitle").value.trim();
+      const subject = document.getElementById("subject").value.trim();
+      const raw = document.getElementById("questions").value.trim();
+
+      if (!title || !subject || !raw) {
+        alert("All fields are required.");
+        return;
+      }
+
+      const questions = raw.split('\n').map(line => {
+        const [question, a, b, c, correct] = line.split('|');
+        return { question, options: [a, b, c], correct };
+      });
+
+      try {
+        const docRef = await addDoc(collection(db, "tests"), {
+          title, subject, questions
+        });
+        document.getElementById("shareLink").innerText = `Share this link: 2.html?testId=${docRef.id}`;
+      } catch (error) {
+        alert("Failed to upload test.");
+        console.error(error);
+      }
+    }
+  </script>
+</body>
+</html>
