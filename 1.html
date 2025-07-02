@@ -1,24 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Quiz</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quiz App</title>
   <style>
-    body { font-family: sans-serif; padding: 15px; max-width: 700px; margin: auto; }
-    img { max-width: 100%; margin-bottom: 10px; border-radius: 8px; }
-    .question-box { border: 1px solid #ccc; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
-    .option { margin: 10px 0; }
-    .option img { max-height: 100px; display: block; margin-top: 5px; }
-    button { padding: 10px 20px; margin: 5px; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      color: #333;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+    }
+    .question-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+    .question-card img {
+      max-width: 100%;
+      margin: 10px 0;
+      border-radius: 12px;
+    }
+    .question-number {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 6px;
+    }
+    .question-text {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .difficulty {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 15px;
+    }
+    .option {
+      display: flex;
+      align-items: center;
+      background: #f1f1f1;
+      padding: 10px 15px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .option:hover {
+      background: #e3e3e3;
+    }
+    .option input {
+      margin-right: 10px;
+    }
+    .option img {
+      height: 60px;
+      margin-left: 10px;
+      border-radius: 8px;
+    }
+    .controls {
+      text-align: center;
+      margin-top: 20px;
+    }
+    button {
+      background: #007bff;
+      color: #fff;
+      border: none;
+      padding: 10px 16px;
+      font-size: 16px;
+      border-radius: 10px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
   </style>
 </head>
 <body>
-  <h1>Quiz</h1>
-  <div id="quiz" class="question-box"></div>
-  <button onclick="prevQuestion()">Previous</button>
-  <button onclick="nextQuestion()">Next</button>
-  <button id="submitBtn" onclick="submitQuiz()" style="display:none;">Submit</button>
+  <div class="container">
+    <div id="quiz" class="question-card"></div>
+    <div class="controls">
+      <button onclick="prevQuestion()">Previous</button>
+      <button onclick="nextQuestion()">Next</button>
+      <button id="submitBtn" onclick="submitQuiz()" style="display:none;">Submit</button>
+    </div>
+  </div>
 
   <script src="data.js"></script>
   <script>
@@ -30,17 +103,16 @@
       const q = questions[current];
       const quizBox = document.getElementById("quiz");
       quizBox.innerHTML = `
+        <div class="question-number">Question ${current + 1} of ${questions.length}</div>
         ${q.questionImage ? `<img src="${q.questionImage}" alt="Question Image">` : ""}
-        <h2>${q.question}</h2>
-        <p><strong>Difficulty:</strong> ${q.difficulty}</p>
+        <div class="question-text">${q.question}</div>
+        <div class="difficulty">Difficulty: ${q.difficulty}</div>
         ${q.options.map((opt, i) => `
-          <div class="option">
-            <label>
-              <input type="radio" name="option" value="${i}" ${answers[current] === i ? 'checked' : ''} />
-              ${opt.text}
-              ${opt.image ? `<img src="${opt.image}" alt="Option Image">` : ""}
-            </label>
-          </div>
+          <label class="option">
+            <input type="radio" name="option" value="${i}" ${answers[current] === i ? "checked" : ""}>
+            ${opt.text || ""}
+            ${opt.image ? `<img src="${opt.image}" alt="Option Image">` : ""}
+          </label>
         `).join('')}
       `;
       document.getElementById("submitBtn").style.display = current === questions.length - 1 ? 'inline-block' : 'none';
