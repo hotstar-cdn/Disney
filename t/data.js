@@ -1,54 +1,58 @@
-const quizData = {
-  code1: {
-    title: "Mixed Quiz Examples",
-    questions: [
-      // 1. Text question, Text options
-      {
-        text: "Which planet is known as the Red Planet?",
-        image: "no",
-        options: ["Earth", "Mars", "Jupiter", "Saturn"],
-        optionImages: ["no", "no", "no", "no"],
-        answer: "B"
-      },
-
-      // 2. Image question, Text options
-      {
-        text: "Which animal is shown in the image?",
-        image: "yes",
-        imageUrl: "https://upload.wikimedia.org/wikipedia/commons/7/73/Lion_waiting_in_Namibia.jpg",
-        options: ["Tiger", "Leopard", "Lion", "Jaguar"],
-        optionImages: ["no", "no", "no", "no"],
-        answer: "C"
-      },
-
-      // 3. Text question, Image options
-      {
-        text: "Select the structure of water (H₂O):",
-        image: "no",
-        options: [
-          "https://upload.wikimedia.org/wikipedia/commons/6/6b/Water_molecule_3D.png",   // Correct
-          "https://upload.wikimedia.org/wikipedia/commons/8/83/Methane-3D-balls.png",
-          "https://upload.wikimedia.org/wikipedia/commons/9/94/Ethanol-3D-vdW.png",
-          "https://upload.wikimedia.org/wikipedia/commons/1/15/Carbon-dioxide-3D-vdW.png"
-        ],
-        optionImages: ["yes", "yes", "yes", "yes"],
-        answer: "A"
-      },
-
-      // 4. Image question, Image options
-      {
-        text: "Which image shows glucose?",
-        image: "yes",
-        imageUrl: "https://upload.wikimedia.org/wikipedia/commons/f/f1/Glucose_Haworth.png",
-        options: [
-          "https://upload.wikimedia.org/wikipedia/commons/f/f1/Glucose_Haworth.png",  // Correct
-          "https://upload.wikimedia.org/wikipedia/commons/f/f3/Fructose_Haworth.png",
-          "https://upload.wikimedia.org/wikipedia/commons/b/b3/Galactose_Haworth.png",
-          "https://upload.wikimedia.org/wikipedia/commons/f/f9/Ribose_Haworth.png"
-        ],
-        optionImages: ["yes", "yes", "yes", "yes"],
-        answer: "A"
-      }
-    ]
+const questions = [
+  {
+    id: 1,
+    difficulty: "Easy",
+    question: "Which are chain isomers?",
+    questionImage: "images/q1.jpg",
+    options: [
+      { text: "Isobutane and Butane", image: "images/opt1.jpg" },
+      { text: "Ethanol and Dimethyl ether", image: "images/opt2.jpg" },
+      { text: "Methane and Ethane", image: "" },
+      { text: "Ethene and Ethyne", image: "" }
+    ],
+    answer: 0,
+    solution: "Chain isomers differ in carbon chain arrangement. Isobutane and Butane are classic examples."
+  },
+  {
+    id: 2,
+    difficulty: "Medium",
+    question: "Which molecule is trans form?",
+    questionImage: "images/q2.jpg",
+    options: [
+      { text: "Cis-2-butene", image: "images/opt3.jpg" },
+      { text: "Trans-2-butene", image: "images/opt4.jpg" },
+      { text: "Cyclobutane", image: "" },
+      { text: "Benzene", image: "" }
+    ],
+    answer: 1,
+    solution: "Trans-2-butene has opposite groups across the double bond—this makes it trans."
+  },
+  {
+    id: 3,
+    difficulty: "Hard",
+    question: "Total number of stereoisomers of the compound below?",
+    questionImage: "images/q3.jpg",
+    options: [
+      { text: "4", image: "" },
+      { text: "8", image: "" },
+      { text: "2", image: "" },
+      { text: "6", image: "" }
+    ],
+    answer: 0,
+    solution: "Number of stereoisomers = 2ⁿ where n = number of chiral centers."
+  },
+  {
+    id: 4,
+    difficulty: "Hard",
+    question: "If 2 moles of monoatomic gas mix with 1 mole of triatomic gas, γ will be:",
+    questionImage: "",
+    options: [
+      { text: "2", image: "" },
+      { text: "2.5", image: "" },
+      { text: "1.5", image: "" },
+      { text: "1", image: "" }
+    ],
+    answer: 2,
+    solution: "γ = Cp/Cv. Monoatomic has γ = 1.67, triatomic ~1.3. Weighted average ≈ 1.5."
   }
-};
+];
