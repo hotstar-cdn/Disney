@@ -1,148 +1,212 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Improvement Book</title>
   <style>
     body {
-      margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background-color: #f6f8fb;
-      color: #333;
+      background-color: #f3f6fc;
+      margin: 0;
+      padding: 0;
     }
+
     header {
-      padding: 20px;
-      font-size: 22px;
-      font-weight: bold;
-      background: #fff;
-      border-bottom: 1px solid #ddd;
-    }
-    .tabs {
-      display: flex;
-      overflow-x: auto;
-      padding: 10px 20px;
-      background: #fff;
-    }
-    .tab {
-      margin-right: 20px;
-      font-size: 16px;
-      padding-bottom: 5px;
-      border-bottom: 2px solid transparent;
-      cursor: pointer;
-    }
-    .tab.active {
-      color: #007bff;
-      font-weight: 600;
-      border-color: #007bff;
-    }
-    .section-title {
-      margin: 20px;
-      font-size: 18px;
-      font-weight: 600;
-    }
-    .module-card {
-      background: #fff;
-      border-radius: 16px;
-      margin: 10px 20px;
       padding: 16px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
-    .module-header {
+      background-color: #f3f6fc;
+      font-size: 18px;
+      font-weight: bold;
       display: flex;
       align-items: center;
     }
-    .module-header img {
-      height: 32px;
-      margin-right: 12px;
+
+    header h1 {
+      margin: 0;
+      font-size: 20px;
     }
-    .module-title {
-      font-size: 17px;
-      font-weight: 600;
+
+    header p {
+      font-size: 14px;
+      color: #777;
+      margin-top: 4px;
     }
-    .mistake-count {
-      margin-top: 6px;
-      color: #666;
+
+    .tabs {
+      display: flex;
+      padding: 0 16px;
+      border-bottom: 2px solid #ddd;
+      background-color: #f3f6fc;
+    }
+
+    .tab {
+      padding: 10px 16px;
+      cursor: pointer;
+      font-weight: 500;
+      color: #555;
+    }
+
+    .tab.active {
+      border-bottom: 2px solid #000;
+      font-weight: bold;
+      color: #000;
+    }
+
+    .container {
+      padding: 16px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #333;
+      margin-top: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      margin-top: 12px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      font-weight: bold;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    .card-title img {
+      height: 24px;
+      width: 24px;
+      margin-right: 10px;
+    }
+
+    .progress-text {
+      color: #888;
       font-size: 14px;
     }
+
     .progress-bar {
-      background: #eee;
       height: 6px;
+      background-color: #e0e0e0;
       border-radius: 4px;
-      margin-top: 8px;
-      overflow: hidden;
+      margin: 8px 0;
     }
-    .progress {
-      background: #007bff;
+
+    .progress-fill {
       height: 100%;
+      background-color: #4a90e2;
+      border-radius: 4px;
     }
+
     .buttons {
       display: flex;
-      justify-content: space-between;
-      margin-top: 14px;
+      gap: 10px;
+      margin-top: 12px;
     }
+
     .btn {
-      flex: 1;
-      margin: 0 4px;
-      padding: 10px;
-      font-size: 14px;
-      border: none;
-      border-radius: 10px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 500;
       cursor: pointer;
+      font-size: 14px;
+      border: 2px solid #4a90e2;
+      background-color: white;
+      color: #4a90e2;
     }
-    .btn.revise {
-      background: #fff;
-      border: 1px solid #007bff;
-      color: #007bff;
-    }
-    .btn.reattempt {
-      background: #007bff;
-      color: #fff;
+
+    .btn.primary {
+      background-color: #4a90e2;
+      color: white;
     }
   </style>
 </head>
 <body>
-  <header>Improvement Book<br><small style="font-weight: normal; font-size: 14px;">Re-attempt your mistakes and improve</small></header>
 
-  <div class="tabs">
-    <div class="tab active">Botany</div>
-    <div class="tab">Chemistry</div>
-    <div class="tab">English</div>
-    <div class="tab">Physics</div>
+  <header>
+    <div>
+      <h1>Improvement Book</h1>
+      <p>Re-attempt your mistakes and improve</p>
+    </div>
+  </header>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="container">
+    <div class="section-title">Last Practiced Module</div>
+    <div id="lastModule"></div>
+
+    <div class="section-title">Previous Modules</div>
+    <div id="previousModules"></div>
   </div>
 
-  <div class="section-title">Last Practiced Module</div>
+  <script src="data.js"></script>
+  <script>
+    const tabsContainer = document.getElementById("tabs");
+    const lastModuleContainer = document.getElementById("lastModule");
+    const previousModulesContainer = document.getElementById("previousModules");
 
-  <div class="module-card">
-    <div class="module-header">
-      <img src="assets/icons/plant.png" alt="icon" />
-      <div class="module-title">Plant Kingdom</div>
-    </div>
-    <div class="mistake-count">2/60 Mistakes</div>
-    <div class="progress-bar">
-      <div class="progress" style="width: 3.3%;"></div>
-    </div>
-    <div class="buttons">
-      <button class="btn revise" onclick="alert('Revise Plant Kingdom')">Revise</button>
-      <button class="btn reattempt" onclick="alert('Re-attempt Plant Kingdom')">Re-attempt</button>
-    </div>
-  </div>
+    const categories = [...new Set(quizzes.map(q => q.category))];
+    let activeCategory = categories[0];
 
-  <div class="section-title">Previous Modules</div>
+    function renderTabs() {
+      tabsContainer.innerHTML = "";
+      categories.forEach(cat => {
+        const tab = document.createElement("div");
+        tab.className = "tab" + (cat === activeCategory ? " active" : "");
+        tab.textContent = cat;
+        tab.onclick = () => {
+          activeCategory = cat;
+          renderModules();
+          renderTabs();
+        };
+        tabsContainer.appendChild(tab);
+      });
+    }
 
-  <div class="module-card">
-    <div class="module-header">
-      <img src="assets/icons/biology.png" alt="icon" />
-      <div class="module-title">Biomolecules</div>
-    </div>
-    <div class="mistake-count">5/101 Mistakes</div>
-    <div class="progress-bar">
-      <div class="progress" style="width: 4.9%;"></div>
-    </div>
-    <div class="buttons">
-      <button class="btn revise" onclick="alert('Revise Biomolecules')">Revise</button>
-      <button class="btn reattempt" onclick="alert('Re-attempt Biomolecules')">Re-attempt</button>
-    </div>
-  </div>
+    function renderModules() {
+      const filtered = quizzes.filter(q => q.category === activeCategory);
+      const [last, ...rest] = filtered;
+
+      lastModuleContainer.innerHTML = "";
+      previousModulesContainer.innerHTML = "";
+
+      if (last) lastModuleContainer.appendChild(createCard(last));
+      rest.forEach(q => {
+        previousModulesContainer.appendChild(createCard(q));
+      });
+    }
+
+    function createCard(quiz) {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      card.innerHTML = `
+        <div class="card-title">
+          <img src="images/icon.png" alt="icon">
+          ${quiz.title}
+        </div>
+        <div class="progress-text">0/${quiz.totalQuestions} Mistakes</div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: ${(quiz.mistakes / quiz.totalQuestions) * 100}%"></div>
+        </div>
+        <div class="buttons">
+          <button class="btn">Revise</button>
+          <button class="btn primary">Re-attempt</button>
+        </div>
+      `;
+
+      return card;
+    }
+
+    renderTabs();
+    renderModules();
+  </script>
+
 </body>
 </html>
