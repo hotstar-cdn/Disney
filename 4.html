@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Improvement Book</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f6f8fb;
+      color: #333;
+    }
+    header {
+      padding: 20px;
+      font-size: 22px;
+      font-weight: bold;
+      background: #fff;
+      border-bottom: 1px solid #ddd;
+    }
+    .tabs {
+      display: flex;
+      overflow-x: auto;
+      padding: 10px 20px;
+      background: #fff;
+    }
+    .tab {
+      margin-right: 20px;
+      font-size: 16px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+    }
+    .tab.active {
+      color: #007bff;
+      font-weight: 600;
+      border-color: #007bff;
+    }
+    .section-title {
+      margin: 20px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .module-card {
+      background: #fff;
+      border-radius: 16px;
+      margin: 10px 20px;
+      padding: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .module-header {
+      display: flex;
+      align-items: center;
+    }
+    .module-header img {
+      height: 32px;
+      margin-right: 12px;
+    }
+    .module-title {
+      font-size: 17px;
+      font-weight: 600;
+    }
+    .mistake-count {
+      margin-top: 6px;
+      color: #666;
+      font-size: 14px;
+    }
+    .progress-bar {
+      background: #eee;
+      height: 6px;
+      border-radius: 4px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+    .progress {
+      background: #007bff;
+      height: 100%;
+    }
+    .buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 14px;
+    }
+    .btn {
+      flex: 1;
+      margin: 0 4px;
+      padding: 10px;
+      font-size: 14px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .btn.revise {
+      background: #fff;
+      border: 1px solid #007bff;
+      color: #007bff;
+    }
+    .btn.reattempt {
+      background: #007bff;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <header>Improvement Book<br><small style="font-weight: normal; font-size: 14px;">Re-attempt your mistakes and improve</small></header>
+
+  <div class="tabs">
+    <div class="tab active">Botany</div>
+    <div class="tab">Chemistry</div>
+    <div class="tab">English</div>
+    <div class="tab">Physics</div>
+  </div>
+
+  <div class="section-title">Last Practiced Module</div>
+
+  <div class="module-card">
+    <div class="module-header">
+      <img src="assets/icons/plant.png" alt="icon" />
+      <div class="module-title">Plant Kingdom</div>
+    </div>
+    <div class="mistake-count">2/60 Mistakes</div>
+    <div class="progress-bar">
+      <div class="progress" style="width: 3.3%;"></div>
+    </div>
+    <div class="buttons">
+      <button class="btn revise" onclick="alert('Revise Plant Kingdom')">Revise</button>
+      <button class="btn reattempt" onclick="alert('Re-attempt Plant Kingdom')">Re-attempt</button>
+    </div>
+  </div>
+
+  <div class="section-title">Previous Modules</div>
+
+  <div class="module-card">
+    <div class="module-header">
+      <img src="assets/icons/biology.png" alt="icon" />
+      <div class="module-title">Biomolecules</div>
+    </div>
+    <div class="mistake-count">5/101 Mistakes</div>
+    <div class="progress-bar">
+      <div class="progress" style="width: 4.9%;"></div>
+    </div>
+    <div class="buttons">
+      <button class="btn revise" onclick="alert('Revise Biomolecules')">Revise</button>
+      <button class="btn reattempt" onclick="alert('Re-attempt Biomolecules')">Re-attempt</button>
+    </div>
+  </div>
+</body>
+</html>
