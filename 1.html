@@ -2,156 +2,112 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Quiz App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flashcard App</title>
   <style>
-    * { box-sizing: border-box; }
     body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #f0f4f8;
-      color: #333;
-    }
-    .container {
-      max-width: 600px;
-      margin: auto;
-      padding: 20px;
-    }
-    .question-card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    }
-    .question-card img {
-      max-width: 100%;
-      margin: 10px 0;
-      border-radius: 12px;
-    }
-    .question-number {
-      font-size: 14px;
-      color: #888;
-      margin-bottom: 6px;
-    }
-    .question-text {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 10px;
-    }
-    .difficulty {
-      font-size: 13px;
-      color: #666;
-      margin-bottom: 15px;
-    }
-    .option {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
       display: flex;
+      justify-content: center;
       align-items: center;
-      background: #f1f1f1;
-      padding: 10px 15px;
+      height: 100vh;
+      margin: 0;
+    }
+    #flashcard {
+      width: 300px;
+      height: 200px;
+      background: white;
       border-radius: 12px;
-      margin-bottom: 10px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-    .option:hover {
-      background: #e3e3e3;
-    }
-    .option input {
-      margin-right: 10px;
-    }
-    .option img {
-      height: 60px;
-      margin-left: 10px;
-      border-radius: 8px;
-    }
-    .controls {
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
       text-align: center;
+      padding: 20px;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+      user-select: none;
+    }
+    #container {
+      text-align: center;
+    }
+    #nextBtn {
       margin-top: 20px;
-    }
-    button {
-      background: #007bff;
-      color: #fff;
+      padding: 10px 20px;
+      background: #333;
+      color: white;
       border: none;
-      padding: 10px 16px;
-      font-size: 16px;
-      border-radius: 10px;
-      margin: 5px;
+      border-radius: 8px;
       cursor: pointer;
-    }
-    button:hover {
-      background: #0056b3;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div id="quiz" class="question-card"></div>
-    <div class="controls">
-      <button onclick="prevQuestion()">Previous</button>
-      <button onclick="nextQuestion()">Next</button>
-      <button id="submitBtn" onclick="submitQuiz()" style="display:none;">Submit</button>
-    </div>
+  <div id="container">
+    <div id="flashcard">Loading...</div>
+    <button id="nextBtn">Next</button>
   </div>
 
   <script src="data.js"></script>
   <script>
-    let current = 0;
-    const answers = [];
-    const startTime = Date.now();
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const flashcards = flashcardData[code] || [];
+    
+    let currentIndex = 0;
+    const card = document.getElementById('flashcard');
+    const nextBtn = document.getElementById('nextBtn');
 
-    function renderQuestion() {
-      const q = questions[current];
-      const quizBox = document.getElementById("quiz");
-      quizBox.innerHTML = `
-        <div class="question-number">Question ${current + 1} of ${questions.length}</div>
-        ${q.questionImage ? `<img src="${q.questionImage}" alt="Question Image">` : ""}
-        <div class="question-text">${q.question}</div>
-        <div class="difficulty">Difficulty: ${q.difficulty}</div>
-        ${q.options.map((opt, i) => `
-          <label class="option">
-            <input type="radio" name="option" value="${i}" ${answers[current] === i ? "checked" : ""}>
-            ${opt.text || ""}
-            ${opt.image ? `<img src="${opt.image}" alt="Option Image">` : ""}
-          </label>
-        `).join('')}
-      `;
-      document.getElementById("submitBtn").style.display = current === questions.length - 1 ? 'inline-block' : 'none';
-    }
+    let showingFront = true;
 
-    function saveAnswer() {
-      const selected = document.querySelector('input[name="option"]:checked');
-      if (selected) answers[current] = parseInt(selected.value);
-    }
-
-    function nextQuestion() {
-      saveAnswer();
-      if (current < questions.length - 1) {
-        current++;
-        renderQuestion();
+    function showCard(index) {
+      if (index >= flashcards.length) {
+        card.innerText = "No more cards!";
+        nextBtn.style.display = 'none';
+        return;
       }
+      card.innerText = flashcards[index].front;
+      card.style.backgroundColor = "white";
+      showingFront = true;
     }
 
-    function prevQuestion() {
-      saveAnswer();
-      if (current > 0) {
-        current--;
-        renderQuestion();
+    showCard(currentIndex);
+
+    card.addEventListener("click", () => {
+      if (!flashcards[currentIndex]) return;
+      if (showingFront) {
+        card.innerText = flashcards[currentIndex].back;
+      } else {
+        card.innerText = flashcards[currentIndex].front;
       }
-    }
+      showingFront = !showingFront;
+    });
 
-    function submitQuiz() {
-      saveAnswer();
-      const correct = questions.filter((q, i) => answers[i] === q.answer).length;
-      const total = questions.length;
-      const avgTime = Math.round((Date.now() - startTime) / 1000 / total);
-      const review = questions.map((q, i) => ({ id: q.id, selected: answers[i] }));
+    let startX = 0;
 
-      localStorage.setItem("quizResult", JSON.stringify({ correct, total, avgTime }));
-      localStorage.setItem("quizReview", JSON.stringify(review));
-      window.location.href = "2.html";
-    }
+    card.addEventListener("touchstart", e => {
+      startX = e.touches[0].clientX;
+    });
 
-    renderQuestion();
+    card.addEventListener("touchend", e => {
+      const endX = e.changedTouches[0].clientX;
+      const diff = endX - startX;
+
+      if (Math.abs(diff) > 50) {
+        if (diff > 0) {
+          // Swiped right - Knew it
+          card.style.backgroundColor = "#a8e6cf"; // green
+        } else {
+          // Swiped left - Still learning
+          card.style.backgroundColor = "#ffd3b6"; // orange
+        }
+      }
+    });
+
+    nextBtn.addEventListener("click", () => {
+      currentIndex++;
+      showCard(currentIndex);
+    });
   </script>
 </body>
 </html>
