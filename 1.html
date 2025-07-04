@@ -46,7 +46,7 @@
       text-align: center;
       padding: 20px;
       margin: 20px 0;
-      transition: background-color 0.3s;
+      transition: background-color 0.3s, transform 0.3s ease;
       user-select: none;
       position: relative;
     }
@@ -137,6 +137,7 @@
 
       const card = cards[current];
       flashcard.style.backgroundColor = "#fff";
+      flashcard.style.transform = "translateX(0px)";
       flashcard.textContent = card.front;
       sideLabel.textContent = "FRONT";
       frontSide = true;
@@ -158,11 +159,13 @@
 
     document.getElementById("btn-left").addEventListener("click", () => {
       flashcard.style.backgroundColor = "#ffe0b2"; // orange
+      flashcard.style.transform = "translateX(-200px)";
       nextCard();
     });
 
     document.getElementById("btn-right").addEventListener("click", () => {
       flashcard.style.backgroundColor = "#b2f2bb"; // green
+      flashcard.style.transform = "translateX(200px)";
       nextCard();
     });
 
@@ -172,6 +175,46 @@
         updateCard();
       }, 300);
     }
+
+    // Swipe Support
+    let startX = 0;
+
+    flashcard.addEventListener("touchstart", (e) => {
+      startX = e.touches[0].clientX;
+    });
+
+    flashcard.addEventListener("touchend", (e) => {
+      const endX = e.changedTouches[0].clientX;
+      const deltaX = endX - startX;
+
+      if (Math.abs(deltaX) > 50) {
+        if (deltaX > 0) {
+          // Swipe right
+          document.getElementById("btn-right").click();
+        } else {
+          // Swipe left
+          document.getElementById("btn-left").click();
+        }
+      }
+    });
+
+    // Mouse swipe (for desktops)
+    flashcard.addEventListener("mousedown", (e) => {
+      startX = e.clientX;
+    });
+
+    flashcard.addEventListener("mouseup", (e) => {
+      const endX = e.clientX;
+      const deltaX = endX - startX;
+
+      if (Math.abs(deltaX) > 50) {
+        if (deltaX > 0) {
+          document.getElementById("btn-right").click();
+        } else {
+          document.getElementById("btn-left").click();
+        }
+      }
+    });
   </script>
 </body>
 </html>
