@@ -1,220 +1,367 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Flashcard App</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #f2f6fb;
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Allie - AI Chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* CSS is identical to the previous version, so it's kept for brevity. */
+        /* You can paste the CSS from the previous response here. */
+        :root {
+            --body-bg: #f0f2f5;
+            --chat-bg: linear-gradient(180deg, #e6e9ff 0%, #f0f3ff 100%);
+            --header-bg: #ffffff;
+            --input-bg: #ffffff;
+            --user-bubble-bg: #007bff;
+            --user-bubble-text: #ffffff;
+            --bot-bubble-bg: #ffffff;
+            --bot-bubble-text: #333333;
+            --primary-font: 'Poppins', sans-serif;
+            --text-color: #333;
+            --border-color: #e0e0e0;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
 
-    header {
-      width: 100%;
-      text-align: left;
-      padding: 10px 20px;
-      font-size: 14px;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    .title {
-      font-size: 18px;
-      font-weight: bold;
-    }
+        body {
+            font-family: var(--primary-font);
+            background-color: var(--body-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: var(--text-color);
+        }
 
-    .subtitle {
-      color: #777;
-      margin-top: 4px;
-    }
+        .chat-container {
+            width: 100%;
+            max-width: 420px;
+            height: 95vh;
+            max-height: 800px;
+            background: var(--header-bg);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
 
-    .flashcard {
-      background: white;
-      width: 90%;
-      max-width: 350px;
-      height: 220px;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 20px;
-      margin: 20px 0;
-      transition: background-color 0.3s, transform 0.3s ease;
-      user-select: none;
-      position: relative;
-    }
+        .chat-header {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--header-bg);
+            flex-shrink: 0;
+        }
 
-    .flashcard span {
-      position: absolute;
-      top: 12px;
-      left: 0;
-      right: 0;
-      font-size: 12px;
-      color: #aaa;
-      text-align: center;
-    }
+        .chat-header .back-arrow {
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-right: 16px;
+            color: #555;
+        }
+        
+        .chat-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+            flex-grow: 1;
+            margin-right: 40px;
+        }
+        
+        .chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            background: var(--chat-bg);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-messages::-webkit-scrollbar { width: 6px; }
+        .chat-messages::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
+        .chat-messages::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
 
-    .buttons {
-      display: flex;
-      gap: 20px;
-      margin-top: 10px;
-    }
+        .welcome-view {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in-out;
+        }
 
-    .btn {
-      padding: 10px 20px;
-      font-size: 14px;
-      border-radius: 24px;
-      cursor: pointer;
-      border: 2px solid;
-      min-width: 120px;
-      transition: 0.2s ease;
-    }
+        .welcome-view p { font-size: 18px; color: #555; margin-top: 20px; }
+        
+        .allie-avatar-svg {
+            width: 120px;
+            height: 120px;
+            filter: drop-shadow(0px 0px 15px rgba(130, 180, 255, 0.7));
+            animation: glow 3s infinite ease-in-out;
+        }
 
-    .btn.orange {
-      color: #f7931e;
-      border-color: #f7931e;
-      background-color: transparent;
-    }
+        .allie-avatar-svg .sparkle { animation: sparkle-anim 2.5s infinite ease-in-out; }
+        .allie-avatar-svg .sparkle:nth-child(2) { animation-delay: -0.5s; }
+        .allie-avatar-svg .sparkle:nth-child(3) { animation-delay: -1s; }
+        .allie-avatar-svg .sparkle:nth-child(4) { animation-delay: -1.5s; }
 
-    .btn.green {
-      color: #00b894;
-      border-color: #00b894;
-      background-color: transparent;
-    }
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0px 0px 15px rgba(130, 180, 255, 0.7)); transform: scale(1); }
+            50% { filter: drop-shadow(0px 0px 25px rgba(180, 150, 255, 0.9)); transform: scale(1.02); }
+        }
 
-    .btn:hover {
-      opacity: 0.85;
-    }
-  </style>
+        @keyframes sparkle-anim {
+            0%, 100% { opacity: 0; transform: scale(0.5) translateY(0); }
+            50% { opacity: 1; transform: scale(1) translateY(-10px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-wrapper { display: flex; margin-bottom: 15px; animation: fadeIn 0.3s ease-out; }
+        
+        .message-bubble { max-width: 75%; padding: 12px 18px; border-radius: 20px; line-height: 1.5; font-size: 15px; }
+        
+        .bot-message .message-bubble { background-color: var(--bot-bubble-bg); color: var(--bot-bubble-text); border-top-left-radius: 5px; }
+        
+        .user-message { justify-content: flex-end; }
+        
+        .user-message .message-bubble { background-color: var(--user-bubble-bg); color: var(--user-bubble-text); border-top-right-radius: 5px; }
+        
+        .message-wrapper .avatar-in-chat { width: 36px; height: 36px; margin-right: 12px; flex-shrink: 0; filter: drop-shadow(0px 0px 5px rgba(130, 180, 255, 0.5)); }
+
+        .typing-indicator { display: flex; align-items: center; }
+        .typing-indicator span { height: 8px; width: 8px; margin: 0 2px; background-color: #9db2d0; border-radius: 50%; display: inline-block; animation: bob 1.4s infinite ease-in-out both; }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bob { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+
+        .message-form { display: flex; align-items: center; padding: 12px 20px; background-color: var(--input-bg); flex-shrink: 0; border-top: 1px solid var(--border-color); }
+
+        .message-form button { border: none; background: none; cursor: pointer; padding: 8px; display: flex; align-items: center; justify-content: center; }
+        
+        .image-button { border: 1px solid var(--border-color); border-radius: 12px; padding: 8px 12px; font-size: 14px; color: #555; font-family: var(--primary-font); margin-right: 12px; transition: background-color 0.2s; }
+        .image-button:hover { background-color: #f0f0f0; }
+        .image-button svg { width: 20px; height: 20px; margin-right: 6px; }
+
+        .message-input { flex-grow: 1; border: none; outline: none; padding: 10px; font-size: 16px; background: transparent; font-family: var(--primary-font); }
+
+        .send-button { background-color: #f0f2f5; border-radius: 50%; width: 40px; height: 40px; transition: background-color 0.2s; }
+        .send-button.active { background-color: var(--user-bubble-bg); }
+        .send-button svg { width: 20px; height: 20px; fill: #aaa; transition: fill 0.2s; }
+        .send-button.active svg { fill: white; }
+    </style>
 </head>
 <body>
-  <header>
-    <div class="title" id="deck-title">Flashcards</div>
-    <div class="subtitle" id="card-count">0 of 0 cards</div>
-  </header>
 
-  <div class="flashcard" id="flashcard">
-    <span id="side-label">FRONT</span>
-    Loading...
-  </div>
+    <div class="chat-container">
+        <header class="chat-header">
+            <span class="back-arrow">←</span>
+            <h1>Allie</h1>
+        </header>
+        <main class="chat-messages" id="chat-messages"></main>
+        <form class="message-form" id="message-form">
+            <button type="button" class="image-button">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path></svg>
+                Image
+            </button>
+            <input type="text" id="message-input" class="message-input" placeholder="Type here" autocomplete="off">
+            <button type="submit" id="send-button" class="send-button">
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+            </button>
+        </form>
+    </div>
 
-  <div class="buttons">
-    <button class="btn orange" id="btn-left">Still learning</button>
-    <button class="btn green" id="btn-right">I know this</button>
-  </div>
+    <svg id="allie-avatar-template" style="display: none;" class="allie-avatar-svg" viewBox="0 0 100 100">
+        <defs>
+            <radialGradient id="allie-gradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                <stop offset="0%" style="stop-color:rgb(218, 233, 255); stop-opacity:1" />
+                <stop offset="60%" style="stop-color:rgb(167, 185, 255); stop-opacity:1" />
+                <stop offset="100%" style="stop-color:rgb(161, 226, 229); stop-opacity:1" />
+            </radialGradient>
+        </defs>
+        <path class="sparkle" d="M5,0 L6,4 L10,5 L6,6 L5,10 L4,6 L0,5 L4,4 Z" fill="#82eefd" transform="translate(15, 15) scale(0.8)"/>
+        <path class="sparkle" d="M5,0 L6,4 L10,5 L6,6 L5,10 L4,6 L0,5 L4,4 Z" fill="#cfaaff" transform="translate(80, 20) scale(1)"/>
+        <path class="sparkle" d="M5,0 L6,4 L10,5 L6,6 L5,10 L4,6 L0,5 L4,4 Z" fill="#82eefd" transform="translate(85, 75) scale(0.7)"/>
+        <path class="sparkle" d="M5,0 L6,4 L10,5 L6,6 L5,10 L4,6 L0,5 L4,4 Z" fill="#cfaaff" transform="translate(10, 80) scale(0.9)"/>
+        <path d="M50 10 C 20 10, 10 20, 10 50 C 10 80, 20 90, 50 90 C 80 90, 90 80, 90 50 C 90 20, 80 10, 50 10 Z" fill="url(#allie-gradient)"/>
+        <circle cx="38" cy="45" r="4" fill="#333"/>
+        <circle cx="62" cy="45" r="4" fill="#333"/>
+        <path d="M42 63 Q 50 70, 58 63" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    </svg>
 
-  <script src="data.js"></script>
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code") || "SS1";
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('message-form');
+            const input = document.getElementById('message-input');
+            const sendButton = document.getElementById('send-button');
+            const messagesContainer = document.getElementById('chat-messages');
+            const avatarTemplate = document.getElementById('allie-avatar-template');
 
-    const cards = flashcardData[code] || [];
-    const title = document.getElementById("deck-title");
-    const count = document.getElementById("card-count");
-    const flashcard = document.getElementById("flashcard");
-    const sideLabel = document.getElementById("side-label");
+            // --- START OF NEW/MODIFIED SECTION ---
+            // ==========================================
+            //       !!! PASTE YOUR NEW API KEY HERE !!!
+            // ==========================================
+            const API_KEY = "AIzaSyBjjBG-Jm2JsyIBn5DfgbvPw7Ua0p_3N0c"; 
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyBjjBG-Jm2JsyIBn5DfgbvPw7Ua0p_3N0c`;
+            
+            // --- UI Helper Functions (mostly unchanged) ---
+            const getAvatarSVG = (className = 'allie-avatar-svg') => {
+                const clone = avatarTemplate.cloneNode(true);
+                clone.removeAttribute('id');
+                clone.classList.add(...className.split(' '));
+                return clone;
+            };
 
-    let current = 0;
-    let frontSide = true;
+            const displayWelcomeMessage = () => {
+                messagesContainer.innerHTML = `
+                    <div class="welcome-view">
+                        ${getAvatarSVG().outerHTML}
+                        <p>Ask me anything!</p>
+                    </div>
+                `;
+            }
 
-    title.textContent = "Chapter: Development";
-    updateCard();
+            const scrollToBottom = () => {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
 
-    function updateCard() {
-      if (current >= cards.length) {
-        flashcard.innerHTML = "🎉 You completed all cards!";
-        count.textContent = `${cards.length} of ${cards.length} cards`;
-        sideLabel.style.display = "none";
-        return;
-      }
+            const toggleSendButton = () => {
+                sendButton.classList.toggle('active', input.value.trim() !== '');
+            };
+            
+            const displayMessage = (text, sender) => {
+                if (document.querySelector('.welcome-view')) {
+                    messagesContainer.innerHTML = '';
+                }
+                const wrapper = document.createElement('div');
+                wrapper.className = `message-wrapper ${sender}-message`;
+                const bubble = document.createElement('div');
+                bubble.className = 'message-bubble';
+                bubble.textContent = text;
+                
+                if (sender === 'bot') {
+                    wrapper.appendChild(getAvatarSVG('avatar-in-chat'));
+                    wrapper.appendChild(bubble);
+                } else {
+                    wrapper.appendChild(bubble);
+                }
+                
+                messagesContainer.appendChild(wrapper);
+                scrollToBottom();
+            }
 
-      const card = cards[current];
-      flashcard.style.backgroundColor = "#fff";
-      flashcard.style.transform = "translateX(0px)";
-      flashcard.textContent = card.front;
-      sideLabel.textContent = "FRONT";
-      frontSide = true;
-      count.textContent = `${current + 1} of ${cards.length} cards`;
-    }
+            const showTypingIndicator = () => {
+                if (document.querySelector('.welcome-view')) {
+                    messagesContainer.innerHTML = '';
+                }
+                if (document.querySelector('.typing-indicator-wrapper')) return; // Already showing
 
-    flashcard.addEventListener("click", () => {
-      const card = cards[current];
-      if (!card) return;
-      if (frontSide) {
-        flashcard.textContent = card.back;
-        sideLabel.textContent = "ANSWER";
-      } else {
-        flashcard.textContent = card.front;
-        sideLabel.textContent = "FRONT";
-      }
-      frontSide = !frontSide;
-    });
+                const wrapper = document.createElement('div');
+                wrapper.className = 'message-wrapper bot-message typing-indicator-wrapper';
+                const bubble = document.createElement('div');
+                bubble.className = 'message-bubble typing-indicator';
+                bubble.innerHTML = `<span></span><span></span><span></span>`;
+                
+                wrapper.appendChild(getAvatarSVG('avatar-in-chat'));
+                wrapper.appendChild(bubble);
+                
+                messagesContainer.appendChild(wrapper);
+                scrollToBottom();
+            }
 
-    document.getElementById("btn-left").addEventListener("click", () => {
-      flashcard.style.backgroundColor = "#ffe0b2"; // orange
-      flashcard.style.transform = "translateX(-200px)";
-      nextCard();
-    });
+            const hideTypingIndicator = () => {
+                document.querySelector('.typing-indicator-wrapper')?.remove();
+            }
 
-    document.getElementById("btn-right").addEventListener("click", () => {
-      flashcard.style.backgroundColor = "#b2f2bb"; // green
-      flashcard.style.transform = "translateX(200px)";
-      nextCard();
-    });
+            // --- Gemini API Call (UPDATED) ---
+            const callGeminiAPI = async (userMessage) => {
+                showTypingIndicator();
 
-    function nextCard() {
-      setTimeout(() => {
-        current++;
-        updateCard();
-      }, 300);
-    }
+                try {
+                    const requestBody = {
+                        contents: [{
+                            parts: [{
+                                text: userMessage
+                            }]
+                        }],
+                        // Optional: Add safety settings
+                        safetySettings: [
+                            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                        ]
+                    };
 
-    // Swipe Support
-    let startX = 0;
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestBody)
+                    });
 
-    flashcard.addEventListener("touchstart", (e) => {
-      startX = e.touches[0].clientX;
-    });
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error.message || 'Network response was not ok');
+                    }
 
-    flashcard.addEventListener("touchend", (e) => {
-      const endX = e.changedTouches[0].clientX;
-      const deltaX = endX - startX;
+                    const data = await response.json();
+                    
+                    hideTypingIndicator();
 
-      if (Math.abs(deltaX) > 50) {
-        if (deltaX > 0) {
-          // Swipe right
-          document.getElementById("btn-right").click();
-        } else {
-          // Swipe left
-          document.getElementById("btn-left").click();
-        }
-      }
-    });
+                    // Extract text from the response
+                    const botResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (botResponse) {
+                        displayMessage(botResponse, 'bot');
+                    } else {
+                        // Handle cases where the response is blocked or empty
+                        displayMessage("I'm sorry, I couldn't generate a response for that. Please try something else.", 'bot');
+                    }
 
-    // Mouse swipe (for desktops)
-    flashcard.addEventListener("mousedown", (e) => {
-      startX = e.clientX;
-    });
+                } catch (error) {
+                    console.error('Error calling Gemini API:', error);
+                    hideTypingIndicator();
+                    displayMessage(`Sorry, an error occurred: ${error.message}`, 'bot');
+                }
+            }
+            // --- END OF NEW/MODIFIED SECTION ---
+            
 
-    flashcard.addEventListener("mouseup", (e) => {
-      const endX = e.clientX;
-      const deltaX = endX - startX;
+            // --- Event Listeners ---
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const userMessage = input.value.trim();
 
-      if (Math.abs(deltaX) > 50) {
-        if (deltaX > 0) {
-          document.getElementById("btn-right").click();
-        } else {
-          document.getElementById("btn-left").click();
-        }
-      }
-    });
-  </script>
+                if (userMessage) {
+                    if (API_KEY === "AIzaSyBjjBG-Jm2JsyIBn5DfgbvPw7Ua0p_3N0c") {
+                        displayMessage("Please add your API key to the code first!", 'bot');
+                        return;
+                    }
+                    displayMessage(userMessage, 'user');
+                    callGeminiAPI(userMessage);
+                    input.value = '';
+                    toggleSendButton();
+                }
+            });
+
+            input.addEventListener('input', toggleSendButton);
+
+            // --- Initial State ---
+            displayWelcomeMessage();
+        });
+    </script>
 </body>
 </html>
