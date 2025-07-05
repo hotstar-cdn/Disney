@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher - Add Question</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
+        h1 { text-align: center; color: #333; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
+        input[type="text"], textarea, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 1rem; }
+        textarea { resize: vertical; min-height: 100px; }
+        button { width: 100%; padding: 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: background-color 0.3s; }
+        button:hover { background-color: #0056b3; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        #status-message { text-align: center; margin-top: 20px; font-weight: bold; min-height: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Add New Question</h1>
+        <form id="add-question-form">
+            <div class="form-group">
+                <label for="chapter-select">Chapter</label>
+                <select id="chapter-select" required></select>
+            </div>
+            <div class="form-group">
+                <label for="question-text">Question</label>
+                <textarea id="question-text" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Options (A, B, C, D)</label>
+                 <div class="options-grid">
+                    <input type="text" id="option-a" placeholder="Option A" required>
+                    <input type="text" id="option-b" placeholder="Option B" required>
+                    <input type="text" id="option-c" placeholder="Option C" required>
+                    <input type="text" id="option-d" placeholder="Option D" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="correct-answer">Correct Answer</label>
+                <select id="correct-answer" required>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="solution-text">Detailed Solution</label>
+                <textarea id="solution-text" required></textarea>
+            </div>
+
+            <button type="submit">Add Question</button>
+        </form>
+        <p id="status-message"></p>
+    </div>
+
+    <!-- Firebase SDK (using compat libraries for simpler syntax) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+    <!-- Chapter Data -->
+    <script src="data.js"></script>
+
+    <script>
+        // Your Firebase configuration from your project
+        const firebaseConfig = {
+            apiKey: "AIzaSyAL5f8Mwk0qoaKBdXh0w2isNRCPSfgBL1g",
+            authDomain: "custom-practice-xperts.firebaseapp.com",
+            projectId: "custom-practice-xperts",
+            storageBucket: "custom-practice-xperts.appspot.com",
+            messagingSenderId: "348008678781",
+            appId: "1:348008678781:web:a57738e0b878b4b8d97814",
+            measurementId: "G-D5V8DPLK6F"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const chapterSelect = document.getElementById('chapter-select');
+            const form = document.getElementById('add-question-form');
+            const statusMessage = document.getElementById('status-message');
+
+            // 1. Populate the chapter dropdown from data.js
+            chapters.forEach(chapter => {
+                const option = document.createElement('option');
+                option.value = chapter.code;
+                option.textContent = chapter.chapter;
+                chapterSelect.appendChild(option);
+            });
+
+            // 2. Handle form submission
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                statusMessage.textContent = 'Submitting...';
+                statusMessage.style.color = 'blue';
+
+                try {
+                    // Collect form data into an object
+                    const questionData = {
+                        chapterCode: document.getElementById('chapter-select').value,
+                        question: document.getElementById('question-text').value,
+                        options: {
+                            A: document.getElementById('option-a').value,
+                            B: document.getElementById('option-b').value,
+                            C: document.getElementById('option-c').value,
+                            D: document.getElementById('option-d').value,
+                        },
+                        correctAnswer: document.getElementById('correct-answer').value,
+                        solution: document.getElementById('solution-text').value,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+
+                    // Add a new document to the "questions" collection
+                    await db.collection("questions").add(questionData);
+                    
+                    statusMessage.textContent = 'Question added successfully!';
+                    statusMessage.style.color = 'green';
+                    form.reset(); 
+
+                } catch (error) {
+                    console.error("Error adding document: ", error);
+                    statusMessage.textContent = 'Error: ' + error.message;
+                    statusMessage.style.color = 'red';
+                }
+
+                // Hide the message after 3 seconds
+                setTimeout(() => {
+                    statusMessage.textContent = '';
+                }, 3000);
+            });
+        });
+    </script>
+</body>
+</html>
