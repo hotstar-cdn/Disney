@@ -17,25 +17,28 @@
         .back-arrow { font-size: 24px; color: var(--text-primary); text-decoration: none; margin-right: 15px; }
         .header-title h1 { font-size: 1.25rem; margin: 0; color: var(--text-primary); }
         .header-title p { font-size: 0.9rem; margin: 2px 0 0; color: var(--text-secondary); }
-        .subject-tabs { display: flex; overflow-x: auto; background: white; border-bottom: 1px solid #e0e0e0; padding: 0 10px; }
-        .tab-button { padding: 15px; font-size: 1rem; font-weight: 500; border: none; background: none; cursor: pointer; color: var(--text-secondary); white-space: nowrap; border-bottom: 3px solid transparent; }
-        .tab-button.active { color: var(--primary-blue); border-bottom-color: var(--primary-blue); }
+        
         .content-area { padding: 20px 15px; background-color: var(--light-gray); }
+        .module-section { margin-bottom: 30px; }
         .module-section-title { font-size: 1rem; font-weight: 600; color: var(--text-secondary); margin: 0 0 10px; text-transform: uppercase; }
+        
         .module-card { background: white; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .module-header { display: flex; align-items: center; padding: 15px; cursor: pointer; }
         .module-icon { width: 40px; height: 40px; margin-right: 15px; }
         .module-name { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); flex-grow: 1; }
         .module-toggle { font-size: 1.5rem; color: var(--primary-blue); transition: transform 0.3s; }
         .module-card.open .module-toggle { transform: rotate(180deg); }
+        
         .module-details { padding: 0 15px 15px; max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out, padding 0.4s ease-out; }
         .module-card.open .module-details { max-height: 200px; }
         .mistake-info { font-size: 1rem; color: var(--text-secondary); margin-bottom: 15px; }
         .mistake-info b { color: var(--text-primary); }
+        
         .action-buttons { display: flex; gap: 10px; }
         .action-buttons button { flex: 1; padding: 10px; font-size: 1rem; font-weight: 600; border-radius: 8px; border: 1px solid var(--primary-blue); cursor: pointer; }
         .btn-revise { background-color: #fff; color: var(--primary-blue); }
         .btn-reattempt { background-color: var(--primary-blue); color: #fff; }
+        
         .empty-state { text-align: center; padding: 50px 20px; color: var(--text-secondary); }
     </style>
 </head>
@@ -50,51 +53,49 @@
             </div>
         </header>
 
-        <nav class="subject-tabs" id="subject-tabs"></nav>
-
         <main class="content-area" id="content-area">
-            <h2 class="module-section-title">Modules with Mistakes</h2>
-            <div id="modules-container"></div>
+            <section class="module-section" id="last-practiced-section">
+                <h2 class="module-section-title">Last Practiced Module</h2>
+                <div id="last-practiced-container"></div>
+            </section>
+            
+            <section class="module-section" id="previous-modules-section">
+                <h2 class="module-section-title">Previous Modules</h2>
+                <div id="previous-modules-container"></div>
+            </section>
         </main>
     </div>
 
     <script src="data.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const tabsContainer = document.getElementById('subject-tabs');
-            const modulesContainer = document.getElementById('modules-container');
+            const lastPracticedContainer = document.getElementById('last-practiced-container');
+            const previousModulesContainer = document.getElementById('previous-modules-container');
+            const lastPracticedSection = document.getElementById('last-practiced-section');
+            const previousModulesSection = document.getElementById('previous-modules-section');
+            const contentArea = document.getElementById('content-area');
+
             const improvementData = JSON.parse(localStorage.getItem('improvementBookData') || '{}');
+            const lastPracticedChapterCode = localStorage.getItem('lastPracticedChapterCode');
 
-            // 1. Get unique subjects and create tabs
-            const subjects = [...new Set(chapters.map(c => c.subject))];
-            subjects.forEach((subject, index) => {
-                const tab = document.createElement('button');
-                tab.className = 'tab-button';
-                tab.textContent = subject;
-                tab.dataset.subject = subject;
-                if (index === 0) tab.classList.add('active'); // Set first tab as active
-                tabsContainer.appendChild(tab);
-            });
+            const chaptersWithMistakes = chapters.filter(c => 
+                improvementData[c.code] && improvementData[c.code].mistakes.length > 0
+            );
 
-            // 2. Function to render modules for a given subject
-            function renderModules(subject) {
-                modulesContainer.innerHTML = '';
-                const chaptersWithMistakes = chapters.filter(c => 
-                    c.subject === subject && improvementData[c.code] && improvementData[c.code].mistakes.length > 0
-                );
+            if (chaptersWithMistakes.length === 0) {
+                contentArea.innerHTML = `<div class="empty-state">Your Improvement Book is empty. Keep practicing to find and fix your mistakes!</div>`;
+                return;
+            }
+            
+            let lastPracticedHtml = '';
+            let previousHtml = '';
 
-                if (chaptersWithMistakes.length === 0) {
-                    modulesContainer.innerHTML = `<div class="empty-state">No mistakes recorded for ${subject}. Keep practicing!</div>`;
-                    return;
-                }
-
-                chaptersWithMistakes.forEach(chapter => {
-                    const mistakeCount = improvementData[chapter.code].mistakes.length;
-                    const card = document.createElement('div');
-                    card.className = 'module-card';
-                    card.innerHTML = `
+            const createModuleCard = (chapter) => {
+                const mistakeCount = improvementData[chapter.code].mistakes.length;
+                return `
+                    <div class="module-card">
                         <div class="module-header">
-                            <svg class="module-icon" viewBox="0 0 24 24"><path fill="${'#' + (Math.random().toString(16) + '000000').substring(2,8)}" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                            <svg class="module-icon" viewBox="0 0 24 24"><path fill="#6c5ce7" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12C20,13.6 19.3,15.1 18.2,16.2L6.8,4.8C7.9,3.7 9.4,3 11,3H12M4,12A8,8 0 0,1 12,4C11.5,4 11.1,4 10.7,4.1L5.9,8.9C5.9,8.9 5.8,9 5.8,9.1C5.3,10 5,11 5,12A8,8 0 0,1 4,12Z" /></svg>
                             <span class="module-name">${chapter.chapter}</span>
                             <span class="module-toggle">∨</span>
                         </div>
@@ -105,22 +106,32 @@
                                 <button class="btn-reattempt" data-code="${chapter.code}">Re-attempt</button>
                             </div>
                         </div>
-                    `;
-                    modulesContainer.appendChild(card);
-                });
-            }
+                    </div>
+                `;
+            };
 
-            // 3. Tab switching logic
-            tabsContainer.addEventListener('click', (e) => {
-                if (e.target.matches('.tab-button')) {
-                    tabsContainer.querySelector('.active').classList.remove('active');
-                    e.target.classList.add('active');
-                    renderModules(e.target.dataset.subject);
+            chaptersWithMistakes.forEach(chapter => {
+                const cardHtml = createModuleCard(chapter);
+                if (chapter.code === lastPracticedChapterCode) {
+                    lastPracticedHtml += cardHtml;
+                } else {
+                    previousHtml += cardHtml;
                 }
             });
 
-            // 4. Module card toggle and button actions logic
-            modulesContainer.addEventListener('click', (e) => {
+            if (lastPracticedHtml) {
+                lastPracticedContainer.innerHTML = lastPracticedHtml;
+            } else {
+                lastPracticedSection.style.display = 'none';
+            }
+
+            if (previousHtml) {
+                previousModulesContainer.innerHTML = previousHtml;
+            } else {
+                previousModulesSection.style.display = 'none';
+            }
+
+            contentArea.addEventListener('click', (e) => {
                 const header = e.target.closest('.module-header');
                 if (header) {
                     header.parentElement.classList.toggle('open');
@@ -128,13 +139,10 @@
 
                 if (e.target.matches('.btn-reattempt')) {
                     const code = e.target.dataset.code;
-                    // Redirect to the test page in re-attempt mode for that chapter
                     window.location.href = `1.html?mode=reattempt&code=${code}`;
                 }
 
                 if (e.target.matches('.btn-revise')) {
-                    // Redirect to review page. We pass the chapter code.
-                    // 'lastTestResults' will be used, but you could enhance 3.html to fetch all mistakes if needed.
                     const lastResult = JSON.parse(localStorage.getItem('lastTestResults'));
                     const code = e.target.dataset.code;
                     if(lastResult && lastResult.chapterCode === code){
@@ -144,9 +152,6 @@
                     }
                 }
             });
-
-            // Initial render
-            renderModules(subjects[0]);
         });
     </script>
 </body>
