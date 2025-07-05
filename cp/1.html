@@ -1,4 +1,44 @@
-    <!-- ... (keep all the HTML and CSS from the previous 1.html) ... -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Practice Test</title>
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #e9ebee; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        .test-container { width: 100%; max-width: 450px; height: 100%; max-height: 800px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1); display: flex; flex-direction: column; overflow: hidden; }
+        .test-header { padding: 16px; border-bottom: 1px solid #dddfe2; display: flex; justify-content: space-between; align-items: center; }
+        #test-title { font-size: 1.1rem; font-weight: 600; margin: 0; }
+        #timer { font-size: 1rem; font-weight: 500; color: #606770; }
+        .swiper { width: 100%; height: 100%; }
+        .swiper-slide { padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; }
+        .question-content { flex-grow: 1; }
+        .question-number { font-size: 1.1rem; font-weight: bold; color: #1c1e21; margin-bottom: 15px; }
+        .question-text { font-size: 1.1rem; line-height: 1.5; margin-bottom: 25px; color: #1c1e21; }
+        .options-container { display: flex; flex-direction: column; gap: 12px; }
+        .option-button { display: flex; align-items: center; padding: 15px; border: 1px solid #dddfe2; border-radius: 8px; background-color: #f0f2f5; cursor: pointer; transition: background-color 0.2s, border-color 0.2s, color 0.2s; text-align: left; width: 100%; font-size: 1rem; }
+        .option-button.selected { background-color: #1877f2; color: #ffffff; border-color: #1877f2; }
+        .option-label { font-weight: bold; margin-right: 15px; min-width: 20px; border: 1px solid #ced0d4; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; justify-content: center; align-items: center; }
+        .option-button.selected .option-label { border-color: #ffffff; }
+        .submit-button-container { padding: 20px; background-color: #fff; }
+        #submit-test { width: 100%; padding: 15px; background-color: #42b72a; color: white; border: none; border-radius: 5px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: none; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1 id="test-title">Loading Test...</h1>
+            <div id="timer">00:00</div>
+        </div>
+        <div class="swiper">
+            <div class="swiper-wrapper" id="question-wrapper"></div>
+        </div>
+        <div class="submit-button-container">
+             <button id="submit-test">Submit Test</button>
+        </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
@@ -33,7 +73,6 @@
             let timerInterval;
 
             try {
-                // MODIFIED: Logic to handle normal vs re-attempt mode
                 if (mode === 'reattempt') {
                     testTitle.textContent += " (Mistakes)";
                     const improvementData = JSON.parse(localStorage.getItem('improvementBookData') || '{}');
@@ -44,13 +83,10 @@
                         return;
                     }
                     
-                    // Firestore's 'in' query is efficient for up to 10 IDs. For more, multiple queries would be needed.
-                    // This is a simplified approach.
                     const querySnapshot = await db.collection("questions").where(firebase.firestore.FieldPath.documentId(), 'in', mistakeIds).get();
                     querySnapshot.forEach(doc => testQuestions.push({ id: doc.id, ...doc.data() }));
 
                 } else {
-                    // Normal mode: Fetch random questions from the chapter
                     const querySnapshot = await db.collection("questions").where("chapterCode", "==", chapterCode).get();
                     let allQuestions = [];
                     querySnapshot.forEach((doc) => allQuestions.push({ id: doc.id, ...doc.data() }));
@@ -117,7 +153,6 @@
                     const timeTaken = Math.floor((Date.now() - startTime) / 1000);
                     let score = 0;
                     
-                    // MODIFIED: Save mistakes to Improvement Book
                     const improvementData = JSON.parse(localStorage.getItem('improvementBookData') || '{}');
                     if (!improvementData[chapterCode]) {
                         improvementData[chapterCode] = { mistakes: [] };
@@ -128,18 +163,19 @@
                         const userAnswer = userAnswers[q.id];
                         if (userAnswer === q.correctAnswer) {
                             score++;
-                            // If in re-attempt mode and answered correctly, remove from mistakes
                             if (mode === 'reattempt') {
                                 chapterMistakes.delete(q.id);
                             }
                         } else if (userAnswer) {
-                            // If answered incorrectly, add to mistakes
                             chapterMistakes.add(q.id);
                         }
                     });
 
                     improvementData[chapterCode].mistakes = Array.from(chapterMistakes);
                     localStorage.setItem('improvementBookData', JSON.stringify(improvementData));
+
+                    // **NEW:** Save the code of the chapter that was just practiced
+                    localStorage.setItem('lastPracticedChapterCode', chapterInfo.code);
 
                     const results = { score, totalQuestions: testQuestions.length, attemptedQuestions: Object.keys(userAnswers).length, timeTaken, chapterName: chapterInfo.chapter, chapterCode: chapterInfo.code, testData: testQuestions, userAnswers: userAnswers };
                     localStorage.setItem('lastTestResults', JSON.stringify(results));
@@ -148,3 +184,5 @@
             }
         });
     </script>
+</body>
+</html>
