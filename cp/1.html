@@ -76,11 +76,7 @@
                 let allQuestions = [];
                 querySnapshot.forEach((doc) => allQuestions.push({ id: doc.id, ...doc.data() }));
                 
-                // *** THIS IS THE KEY PART THAT SHUFFLES THE QUESTIONS ***
-                // It randomly sorts all available questions for the chapter.
                 const shuffled = allQuestions.sort(() => 0.5 - Math.random());
-                
-                // Then, we take the required number of questions from the shuffled list.
                 testQuestions = shuffled.slice(0, Math.min(questionCount, allQuestions.length));
 
                 if (testQuestions.length === 0) {
@@ -151,11 +147,41 @@
                     clearInterval(timerInterval);
                     const timeTaken = Math.floor((Date.now() - startTime) / 1000);
 
-                    let score = 0;
-                    testQuestions.forEach(q => {
-                        if (userAnswers[q.id] === q.correctAnswer) score++;
-                    });
+                    // --- START OF NEW/UPDATED LOGIC ---
                     
+                    let score = 0;
+                    const wrongQuestionsList = [];
+                    testQuestions.forEach(q => {
+                        const userAnswer = userAnswers[q.id];
+                        if (userAnswer === q.correctAnswer) {
+                            score++;
+                        } else {
+                            // If answer is wrong or unattempted, add to the improvement book list
+                            wrongQuestionsList.push({
+                                ...q, // the full question object
+                                userAnswer: userAnswer || null // Store what the user answered (or null if unattempted)
+                            });
+                        }
+                    });
+
+                    // Save wrong questions to the persistent Improvement Book
+                    if (wrongQuestionsList.length > 0) {
+                        const improvementBook = JSON.parse(localStorage.getItem('improvementBookData')) || [];
+                        const newTestEntry = {
+                            testId: `test-${Date.now()}`,
+                            chapterName: chapterInfo.chapter,
+                            chapterCode: chapterCode,
+                            totalQuestionsInTest: testQuestions.length,
+                            date: new Date().toLocaleString(),
+                            wrongQuestions: wrongQuestionsList
+                        };
+                        improvementBook.push(newTestEntry);
+                        localStorage.setItem('improvementBookData', JSON.stringify(improvementBook));
+                    }
+                    
+                    // --- END OF NEW/UPDATED LOGIC ---
+                    
+                    // This part remains for the immediate results page (2.html)
                     const results = {
                         score,
                         totalQuestions: testQuestions.length,
