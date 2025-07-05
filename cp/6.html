@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Improvement Book</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        .main-container { max-width: 900px; margin: auto; }
+        h1 { font-size: 2.2rem; color: #1c1e21; margin-bottom: 20px; }
+        .chapter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+        .chapter-card { display: flex; flex-direction: column; justify-content: space-between; background-color: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-decoration: none; color: #1c1e21; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .chapter-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
+        .card-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .chapter-icon { width: 48px; height: 48px; }
+        .chapter-title { font-size: 1.3rem; font-weight: 600; margin: 0; }
+        .card-footer { border-top: 1px solid #e9ebee; padding-top: 15px; font-size: 1rem; color: #606770; }
+        .card-footer .mistake-count { font-weight: bold; color: #fa383e; }
+        .empty-state { text-align: center; padding: 50px; background-color: #fff; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>Improvement Book</h1>
+        <div class="chapter-grid" id="chapter-grid">
+            <!-- Chapter cards will be injected here -->
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const grid = document.getElementById('chapter-grid');
+            const bookData = JSON.parse(localStorage.getItem('improvementBookData')) || [];
+
+            // --- SVG Icon Map: This keeps data.js clean! ---
+            const iconMap = {
+                PHY: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 100 15 7.5 7.5 0 000-15zM21 21l-5.197-5.197" /></svg>`, // Telescope/Magnifier for Physics
+                CHEM: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" /></svg>`, // Test tubes/Beaker for Chemistry
+                BIO: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-4.243-4.243l3.275-3.275a4.5 4.5 0 00-6.336 4.486c.061.58.053 1.193-.14 1.743m-2.132-2.132L6.31 7.21l-2.496 3.03c-.317.384-.74.626-1.208.766M3.4 7.21l4.656-5.653a2.548 2.548 0 113.586 3.586L6.837 11.83" /></svg>`, // DNA for Biology
+                BOT: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" /></svg>`, // Leaf/Plant for Botany
+                ZOO: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.864 4.243A7.5 7.5 0 0119.5 10.5c0 2.92-.556 5.709-1.587 8.121a7.5 7.5 0 01-1.071 1.897l-6.625 6.625a3.375 3.375 0 01-4.773 0l-6.625-6.625a3.375 3.375 0 010-4.773l5.779-5.779A7.5 7.5 0 017.864 4.243z" /></svg>`, // Paw for Zoology
+                MATH: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008zm0 3h.008v.008H8.25v-.008zm0 3h.008v.008H8.25v-.008zm3-6h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm3-6h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zM4.5 12.75a11.25 11.25 0 0114.546-9.422 1.125 1.125 0 00-1.954.918A9 9 0 1010.56 19.5a1.125 1.125 0 001.03-1.936A7.5 7.5 0 014.5 12.75z" /></svg>`, // Calculator for Math
+            };
+            
+            if (bookData.length === 0) {
+                grid.innerHTML = `<div class="empty-state"><h2>Your Improvement Book is Empty!</h2><p>Complete a test, and the chapters you've practiced will appear here.</p></div>`;
+                return;
+            }
+
+            bookData.forEach(testEntry => {
+                const subjectPrefix = testEntry.chapterCode.split('_')[0];
+                const iconSvg = iconMap[subjectPrefix] || iconMap.PHY; // Default icon
+                const mistakeCount = testEntry.wrongQuestions.length;
+
+                const card = document.createElement('a');
+                card.className = 'chapter-card';
+                card.href = `chapter_details.html?code=${testEntry.chapterCode}`;
+                card.innerHTML = `
+                    <div>
+                        <div class="card-header">
+                            <div class="chapter-icon">${iconSvg}</div>
+                            <h2 class="chapter-title">${testEntry.chapterName}</h2>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        Last attempt had <span class="mistake-count">${mistakeCount}</span> mistakes to review.
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        });
+    </script>
+</body>
+</html>
