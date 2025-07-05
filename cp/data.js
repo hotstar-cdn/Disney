@@ -8,6 +8,9 @@ const chapters = [
   { code: 'PHY_03', chapter: 'Laws of Motion' },
   { code: 'CHEM_01', chapter: 'Some Basic Concepts of Chemistry' },
   { code: 'CHEM_02', chapter: 'Structure of Atom' },
-  { code: 'MATH_01', chapter: 'Sets and Functions' },
-  { code: 'MATH_02', chapter: 'Trigonometry' }
+  { code: 'CHEM_03', chapter: 'Biomolecules' },
+  { code: 'BIO_01', chapter: 'The Living World' },
+  { code: 'BIO_02', chapter: 'Plant Kingdom' },
+  { code: 'ENG_01', chapter: 'Tenses' },
+  { code: 'ENG_02', chapter: 'Articles' }
 ];
