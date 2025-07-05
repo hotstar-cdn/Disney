@@ -7,26 +7,29 @@
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
         .main-container { max-width: 800px; margin: auto; }
-        h1 { color: #1c1e21; }
-        .empty-state { text-align: center; margin-top: 50px; color: #606770; background-color: #fff; padding: 40px; border-radius: 8px; }
+        h1 { color: #1c1e21; padding-bottom: 10px; border-bottom: 1px solid #dddfe2; margin-bottom: 20px;}
+        .empty-state { text-align: center; margin-top: 50px; color: #606770; background-color: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         
-        /* Accordion Styles for each test */
-        .test-entry { background-color: #fff; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .test-summary { cursor: pointer; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .test-entry { background-color: #fff; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); overflow: hidden; }
+        .test-summary { cursor: pointer; padding: 20px; display: flex; justify-content: space-between; align-items: center; transition: background-color 0.2s; }
         .test-summary:hover { background-color: #f7f7f7; }
-        .test-summary h2 { margin: 0; font-size: 1.2rem; color: #1c1e21; }
-        .test-summary .date { font-size: 0.9rem; color: #606770; }
-        .test-details { padding: 0 20px 20px 20px; border-top: 1px solid #dddfe2; }
-        .test-details p { margin-top: 0; }
+        .test-summary-info h2 { margin: 0; font-size: 1.2rem; color: #1c1e21; }
+        .test-summary-info .date { font-size: 0.9rem; color: #606770; }
+        .test-summary .arrow { font-size: 1.5rem; color: #606770; transition: transform 0.3s; }
+        .test-summary.active .arrow { transform: rotate(180deg); }
+        
+        .test-details { padding: 0 20px 20px 20px; border-top: 1px solid #dddfe2; display: none; /* Hidden by default */ }
+        .test-details p { margin: 15px 0; color: #606770;}
+        
         .wrong-question-list { list-style: none; padding: 0; }
         .wrong-question-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #e9ebee; }
         .wrong-question-item:last-child { border-bottom: none; }
-        .wrong-question-text { flex-grow: 1; margin-right: 15px; }
-        .review-btn, .reattempt-btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
-        .review-btn { background-color: #e7f3ff; color: #1877f2; }
-        .reattempt-btn { background-color: #42b72a; color: white; text-decoration: none; display: inline-block; margin-top: 15px; }
+        .wrong-question-text { flex-grow: 1; margin-right: 15px; color: #1c1e21;}
+        
+        .review-btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.9rem; background-color: #e7f3ff; color: #1877f2; }
+        .reattempt-btn { background-color: #42b72a; color: white; text-decoration: none; display: inline-block; padding: 10px 20px; border-radius: 5px; font-weight: bold; margin-top: 20px; }
 
-        /* Modal from 3.html (reused) */
+        /* Modal Styles (reused) */
         .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
         .modal-content { background-color: #fefefe; margin: 5% auto; padding: 30px; border: 1px solid #888; width: 90%; max-width: 600px; border-radius: 10px; position: relative; }
         .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; position: absolute; top: 10px; right: 20px; }
@@ -40,8 +43,7 @@
     </style>
 </head>
 <body>
-
-    <div class="main-container" id="main-container">
+    <div class="main-container">
         <h1>Improvement Book</h1>
         <div id="tests-container">
             <!-- Test entries will be injected here -->
@@ -67,7 +69,7 @@
             const bookData = JSON.parse(localStorage.getItem('improvementBookData')) || [];
 
             if (bookData.length === 0) {
-                mainContainer.innerHTML += `
+                testsContainer.innerHTML = `
                     <div class="empty-state">
                         <h2>Your Improvement Book is Empty!</h2>
                         <p>Any questions you answer incorrectly will be saved here for you to review.</p>
@@ -76,9 +78,8 @@
                 return;
             }
 
-            // Display most recent tests first
             bookData.reverse().forEach(testEntry => {
-                const testElement = document.createElement('details');
+                const testElement = document.createElement('div');
                 testElement.className = 'test-entry';
                 
                 let wrongQuestionsHtml = testEntry.wrongQuestions.map((q, index) => `
@@ -89,10 +90,13 @@
                 `).join('');
 
                 testElement.innerHTML = `
-                    <summary class="test-summary">
-                        <h2>${testEntry.chapterName}</h2>
-                        <span class="date">${testEntry.date}</span>
-                    </summary>
+                    <div class="test-summary">
+                        <div class="test-summary-info">
+                            <h2>${testEntry.chapterName}</h2>
+                            <span class="date">${testEntry.date}</span>
+                        </div>
+                        <span class="arrow">⌄</span>
+                    </div>
                     <div class="test-details">
                         <p>You made ${testEntry.wrongQuestions.length} mistakes in this test.</p>
                         <ul class="wrong-question-list">${wrongQuestionsHtml}</ul>
@@ -102,13 +106,27 @@
                 testsContainer.appendChild(testElement);
             });
 
-            // Event Delegation for Review Buttons
+            // Accordion and Modal Logic
             testsContainer.addEventListener('click', e => {
-                if (e.target.classList.contains('review-btn')) {
-                    const testId = e.target.dataset.testid;
-                    const questionId = e.target.dataset.qid;
+                const summary = e.target.closest('.test-summary');
+                const reviewBtn = e.target.closest('.review-btn');
 
-                    // Find the specific question data
+                // Logic for opening/closing the accordion
+                if (summary) {
+                    summary.classList.toggle('active');
+                    const details = summary.nextElementSibling;
+                    if (details.style.display === "block") {
+                        details.style.display = "none";
+                    } else {
+                        details.style.display = "block";
+                    }
+                    return; // Stop further execution if it's a summary click
+                }
+
+                // Logic for opening the review modal
+                if (reviewBtn) {
+                    const testId = reviewBtn.dataset.testid;
+                    const questionId = reviewBtn.dataset.qid;
                     const test = bookData.find(t => t.testId === testId);
                     const questionData = test.wrongQuestions.find(q => q.id === questionId);
                     
@@ -122,14 +140,10 @@
                 let optionsHtml = '';
                 for (const key in qData.options) {
                     let optionClass = '';
-                    if (key === qData.correctAnswer) {
-                        optionClass = 'correct';
-                    } else if (key === qData.userAnswer) {
-                        optionClass = 'incorrect';
-                    }
+                    if (key === qData.correctAnswer) optionClass = 'correct';
+                    else if (key === qData.userAnswer) optionClass = 'incorrect';
                     optionsHtml += `<div class="option ${optionClass}">${key}: ${qData.options[key]}</div>`;
                 }
-
                 modalBody.innerHTML = `
                     <p class="modal-question">${qData.question.replace(/\n/g, '<br>')}</p>
                     <div class="modal-options">${optionsHtml}</div>
@@ -141,12 +155,9 @@
                 modal.style.display = 'block';
             }
             
-            // Modal closing logic
             closeModalBtn.onclick = () => modal.style.display = "none";
             window.onclick = (event) => {
-                if (event.target == modal) {
-                    modal.style.display = "none";
-                }
+                if (event.target == modal) modal.style.display = "none";
             };
         });
     </script>
