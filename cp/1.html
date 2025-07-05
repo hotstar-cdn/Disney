@@ -21,22 +21,15 @@
         .option-button.selected { background-color: #1877f2; color: #ffffff; border-color: #1877f2; }
         .option-label { font-weight: bold; margin-right: 15px; min-width: 20px; border: 1px solid #ced0d4; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; justify-content: center; align-items: center; }
         .option-button.selected .option-label { border-color: #ffffff; }
-        .submit-button-container { padding: 20px; background-color: #fff; border-top: 1px solid #dddfe2;}
+        .submit-button-container { padding: 20px; background-color: #fff; }
         #submit-test { width: 100%; padding: 15px; background-color: #42b72a; color: white; border: none; border-radius: 5px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: none; }
     </style>
 </head>
 <body>
     <div class="test-container">
-        <div class="test-header">
-            <h1 id="test-title">Loading Test...</h1>
-            <div id="timer">00:00</div>
-        </div>
-        <div class="swiper">
-            <div class="swiper-wrapper" id="question-wrapper"></div>
-        </div>
-        <div class="submit-button-container">
-             <button id="submit-test">Submit Test</button>
-        </div>
+        <div class="test-header"><h1 id="test-title">Loading Test...</h1><div id="timer">00:00</div></div>
+        <div class="swiper"><div class="swiper-wrapper" id="question-wrapper"></div></div>
+        <div class="submit-button-container"><button id="submit-test">Submit Test</button></div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -53,133 +46,54 @@
             const testTitle = document.getElementById('test-title');
             const submitButton = document.getElementById('submit-test');
             const timerEl = document.getElementById('timer');
-            
             const params = new URLSearchParams(window.location.search);
             const chapterCode = params.get('code');
             const questionCount = parseInt(params.get('count')) || 5; 
-
-            if (!chapterCode) {
-                questionWrapper.innerHTML = `<div class="swiper-slide">Error: No chapter code provided.</div>`;
-                return;
-            }
-
+            if (!chapterCode) { questionWrapper.innerHTML = `<div class="swiper-slide">Error: No chapter code provided.</div>`; return; }
             const chapterInfo = chapters.find(c => c.code === chapterCode);
             testTitle.textContent = chapterInfo ? chapterInfo.chapter : 'Custom Test';
-
-            let testQuestions = [];
-            let userAnswers = {};
-            let startTime;
-            let timerInterval;
+            let testQuestions = [], userAnswers = {}, startTime, timerInterval;
 
             try {
                 const querySnapshot = await db.collection("questions").where("chapterCode", "==", chapterCode).get();
                 let allQuestions = [];
                 querySnapshot.forEach((doc) => allQuestions.push({ id: doc.id, ...doc.data() }));
-                
                 const shuffled = allQuestions.sort(() => 0.5 - Math.random());
                 testQuestions = shuffled.slice(0, Math.min(questionCount, allQuestions.length));
-
-                if (testQuestions.length === 0) {
-                     questionWrapper.innerHTML = `<div class="swiper-slide">No questions found for this chapter.</div>`;
-                     return;
-                }
-
+                if (testQuestions.length === 0) { questionWrapper.innerHTML = `<div class="swiper-slide">No questions found for this chapter.</div>`; return; }
                 renderQuestions();
                 initializeTest();
+            } catch (error) { console.error("Error fetching questions: ", error); questionWrapper.innerHTML = `<div class="swiper-slide">Error loading questions.</div>`; }
 
-            } catch (error) {
-                console.error("Error fetching questions: ", error);
-                questionWrapper.innerHTML = `<div class="swiper-slide">Error loading questions.</div>`;
-            }
-
-            function renderQuestions() {
-                questionWrapper.innerHTML = testQuestions.map((q, index) => `
-                    <div class="swiper-slide" data-question-id="${q.id}" data-question-index="${index}">
-                        <div class="question-content">
-                            <p class="question-number">Q${index + 1}</p>
-                            <p class="question-text">${q.question.replace(/\n/g, '<br>')}</p>
-                        </div>
-                        <div class="options-container">
-                            <button class="option-button" data-option="A"><span class="option-label">A</span> ${q.options.A}</button>
-                            <button class="option-button" data-option="B"><span class="option-label">B</span> ${q.options.B}</button>
-                            <button class="option-button" data-option="C"><span class="option-label">C</span> ${q.options.C}</button>
-                            <button class="option-button" data-option="D"><span class="option-label">D</span> ${q.options.D}</button>
-                        </div>
-                    </div>
-                `).join('');
-            }
-
-            function startTimer() {
-                startTime = Date.now();
-                timerInterval = setInterval(() => {
-                    const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
-                    const minutes = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0');
-                    const seconds = (elapsedSeconds % 60).toString().padStart(2, '0');
-                    timerEl.textContent = `${minutes}:${seconds}`;
-                }, 1000);
-            }
+            function renderQuestions() { questionWrapper.innerHTML = testQuestions.map((q, index) => `<div class="swiper-slide" data-question-id="${q.id}"><div class="question-content"><p class="question-number">Q${index + 1}</p><p class="question-text">${q.question.replace(/\n/g, '<br>')}</p></div><div class="options-container"><button class="option-button" data-option="A"><span class="option-label">A</span> ${q.options.A}</button><button class="option-button" data-option="B"><span class="option-label">B</span> ${q.options.B}</button><button class="option-button" data-option="C"><span class="option-label">C</span> ${q.options.C}</button><button class="option-button" data-option="D"><span class="option-label">D</span> ${q.options.D}</button></div></div>`).join(''); }
+            function startTimer() { startTime = Date.now(); timerInterval = setInterval(() => { const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000); const minutes = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0'); const seconds = (elapsedSeconds % 60).toString().padStart(2, '0'); timerEl.textContent = `${minutes}:${seconds}`; }, 1000); }
+            function updateSubmitButtonVisibility(swiperInstance) { if (swiperInstance.isEnd) { submitButton.style.display = 'block'; } else { submitButton.style.display = 'none'; } }
 
             function initializeTest() {
                 startTimer();
-                const swiper = new Swiper('.swiper', {
-                    on: {
-                        slideChange: function () {
-                            if (this.isEnd) submitButton.style.display = 'block';
-                            else submitButton.style.display = 'none';
-                        }
-                    }
-                });
-
-                // *** THIS IS THE FIX ***
-                // Show button immediately if there's only one slide
-                if (swiper.isEnd) {
-                    submitButton.style.display = 'block';
-                }
-
-                questionWrapper.addEventListener('click', (e) => {
-                    const selectedOption = e.target.closest('.option-button');
-                    if (!selectedOption) return;
-
-                    const slide = selectedOption.closest('.swiper-slide');
-                    userAnswers[slide.dataset.questionId] = selectedOption.dataset.option;
-
-                    slide.querySelectorAll('.option-button').forEach(btn => btn.classList.remove('selected'));
-                    selectedOption.classList.add('selected');
-                    
-                    if (!swiper.isEnd) setTimeout(() => swiper.slideNext(), 300);
-                });
-
+                const swiper = new Swiper('.swiper', { on: { slideChange: function () { updateSubmitButtonVisibility(this); } } });
+                updateSubmitButtonVisibility(swiper);
+                questionWrapper.addEventListener('click', (e) => { const selectedOption = e.target.closest('.option-button'); if (!selectedOption) return; const slide = selectedOption.closest('.swiper-slide'); userAnswers[slide.dataset.questionId] = selectedOption.dataset.option; slide.querySelectorAll('.option-button').forEach(btn => btn.classList.remove('selected')); selectedOption.classList.add('selected'); if (!swiper.isEnd) setTimeout(() => swiper.slideNext(), 300); });
+                
                 submitButton.addEventListener('click', () => {
                     clearInterval(timerInterval);
                     const timeTaken = Math.floor((Date.now() - startTime) / 1000);
+                    let score = 0; const wrongQuestionsList = [];
+                    testQuestions.forEach(q => { if (userAnswers[q.id] === q.correctAnswer) { score++; } else { wrongQuestionsList.push({ ...q, userAnswer: userAnswers[q.id] || null }); } });
                     
-                    let score = 0;
-                    const wrongQuestionsList = [];
-                    testQuestions.forEach(q => {
-                        const userAnswer = userAnswers[q.id];
-                        if (userAnswer === q.correctAnswer) {
-                            score++;
-                        } else {
-                            wrongQuestionsList.push({ ...q, userAnswer: userAnswer || null });
-                        }
-                    });
+                    localStorage.setItem('lastTestResults', JSON.stringify({ score, totalQuestions: testQuestions.length, attemptedQuestions: Object.keys(userAnswers).length, timeTaken, chapterName: chapterInfo.chapter, testData: testQuestions, userAnswers }));
+                    
+                    const improvementBook = JSON.parse(localStorage.getItem('improvementBookData')) || [];
+                    const newTestEntry = { testId: `test-${Date.now()}`, chapterName: chapterInfo.chapter, chapterCode, totalQuestionsInTest: testQuestions.length, wrongQuestions: wrongQuestionsList, date: new Date().toISOString() };
+                    const filteredBook = improvementBook.filter(entry => entry.chapterCode !== chapterCode);
+                    filteredBook.push(newTestEntry);
+                    localStorage.setItem('improvementBookData', JSON.stringify(filteredBook));
+                    
+                    const history = JSON.parse(localStorage.getItem('testPerformanceHistory')) || {};
+                    if (!history[chapterCode]) { history[chapterCode] = []; }
+                    history[chapterCode].push({ score, total: testQuestions.length, date: new Date().toISOString() });
+                    localStorage.setItem('testPerformanceHistory', JSON.stringify(history));
 
-                    if (wrongQuestionsList.length > 0) {
-                        const improvementBook = JSON.parse(localStorage.getItem('improvementBookData')) || [];
-                        const newTestEntry = {
-                            testId: `test-${Date.now()}`,
-                            chapterName: chapterInfo.chapter,
-                            chapterCode: chapterCode,
-                            totalQuestionsInTest: testQuestions.length,
-                            date: new Date().toLocaleString(),
-                            wrongQuestions: wrongQuestionsList
-                        };
-                        improvementBook.push(newTestEntry);
-                        localStorage.setItem('improvementBookData', JSON.stringify(improvementBook));
-                    }
-                    
-                    const results = { score, totalQuestions: testQuestions.length, attemptedQuestions: Object.keys(userAnswers).length, timeTaken, chapterName: chapterInfo.chapter, testData: testQuestions, userAnswers: userAnswers };
-                    localStorage.setItem('lastTestResults', JSON.stringify(results));
                     window.location.href = '2.html';
                 });
             }
