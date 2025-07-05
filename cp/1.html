@@ -21,7 +21,7 @@
         .option-button.selected { background-color: #1877f2; color: #ffffff; border-color: #1877f2; }
         .option-label { font-weight: bold; margin-right: 15px; min-width: 20px; border: 1px solid #ced0d4; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; justify-content: center; align-items: center; }
         .option-button.selected .option-label { border-color: #ffffff; }
-        .submit-button-container { padding: 20px; background-color: #fff; }
+        .submit-button-container { padding: 20px; background-color: #fff; border-top: 1px solid #dddfe2;}
         #submit-test { width: 100%; padding: 15px; background-color: #42b72a; color: white; border: none; border-radius: 5px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: none; }
     </style>
 </head>
@@ -130,6 +130,12 @@
                     }
                 });
 
+                // *** THIS IS THE FIX ***
+                // Show button immediately if there's only one slide
+                if (swiper.isEnd) {
+                    submitButton.style.display = 'block';
+                }
+
                 questionWrapper.addEventListener('click', (e) => {
                     const selectedOption = e.target.closest('.option-button');
                     if (!selectedOption) return;
@@ -146,8 +152,6 @@
                 submitButton.addEventListener('click', () => {
                     clearInterval(timerInterval);
                     const timeTaken = Math.floor((Date.now() - startTime) / 1000);
-
-                    // --- START OF NEW/UPDATED LOGIC ---
                     
                     let score = 0;
                     const wrongQuestionsList = [];
@@ -156,15 +160,10 @@
                         if (userAnswer === q.correctAnswer) {
                             score++;
                         } else {
-                            // If answer is wrong or unattempted, add to the improvement book list
-                            wrongQuestionsList.push({
-                                ...q, // the full question object
-                                userAnswer: userAnswer || null // Store what the user answered (or null if unattempted)
-                            });
+                            wrongQuestionsList.push({ ...q, userAnswer: userAnswer || null });
                         }
                     });
 
-                    // Save wrong questions to the persistent Improvement Book
                     if (wrongQuestionsList.length > 0) {
                         const improvementBook = JSON.parse(localStorage.getItem('improvementBookData')) || [];
                         const newTestEntry = {
@@ -179,19 +178,7 @@
                         localStorage.setItem('improvementBookData', JSON.stringify(improvementBook));
                     }
                     
-                    // --- END OF NEW/UPDATED LOGIC ---
-                    
-                    // This part remains for the immediate results page (2.html)
-                    const results = {
-                        score,
-                        totalQuestions: testQuestions.length,
-                        attemptedQuestions: Object.keys(userAnswers).length,
-                        timeTaken,
-                        chapterName: chapterInfo.chapter,
-                        testData: testQuestions,
-                        userAnswers: userAnswers,
-                    };
-
+                    const results = { score, totalQuestions: testQuestions.length, attemptedQuestions: Object.keys(userAnswers).length, timeTaken, chapterName: chapterInfo.chapter, testData: testQuestions, userAnswers: userAnswers };
                     localStorage.setItem('lastTestResults', JSON.stringify(results));
                     window.location.href = '2.html';
                 });
