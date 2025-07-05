@@ -57,7 +57,6 @@
             const params = new URLSearchParams(window.location.search);
             const chapterCode = params.get('code');
             const questionCount = parseInt(params.get('count')) || 5; 
-            const mode = params.get('mode');
 
             if (!chapterCode) {
                 questionWrapper.innerHTML = `<div class="swiper-slide">Error: No chapter code provided.</div>`;
@@ -73,29 +72,19 @@
             let timerInterval;
 
             try {
-                if (mode === 'reattempt') {
-                    testTitle.textContent += " (Mistakes)";
-                    const improvementData = JSON.parse(localStorage.getItem('improvementBookData') || '{}');
-                    const mistakeIds = improvementData[chapterCode]?.mistakes || [];
-
-                    if (mistakeIds.length === 0) {
-                        questionWrapper.innerHTML = `<div class="swiper-slide"><h1>Congratulations!</h1><p>You have no mistakes to re-attempt in this chapter.</p></div>`;
-                        return;
-                    }
-                    
-                    const querySnapshot = await db.collection("questions").where(firebase.firestore.FieldPath.documentId(), 'in', mistakeIds).get();
-                    querySnapshot.forEach(doc => testQuestions.push({ id: doc.id, ...doc.data() }));
-
-                } else {
-                    const querySnapshot = await db.collection("questions").where("chapterCode", "==", chapterCode).get();
-                    let allQuestions = [];
-                    querySnapshot.forEach((doc) => allQuestions.push({ id: doc.id, ...doc.data() }));
-                    const shuffled = allQuestions.sort(() => 0.5 - Math.random());
-                    testQuestions = shuffled.slice(0, Math.min(questionCount, allQuestions.length));
-                }
+                const querySnapshot = await db.collection("questions").where("chapterCode", "==", chapterCode).get();
+                let allQuestions = [];
+                querySnapshot.forEach((doc) => allQuestions.push({ id: doc.id, ...doc.data() }));
+                
+                // *** THIS IS THE KEY PART THAT SHUFFLES THE QUESTIONS ***
+                // It randomly sorts all available questions for the chapter.
+                const shuffled = allQuestions.sort(() => 0.5 - Math.random());
+                
+                // Then, we take the required number of questions from the shuffled list.
+                testQuestions = shuffled.slice(0, Math.min(questionCount, allQuestions.length));
 
                 if (testQuestions.length === 0) {
-                     questionWrapper.innerHTML = `<div class="swiper-slide">No questions found.</div>`;
+                     questionWrapper.innerHTML = `<div class="swiper-slide">No questions found for this chapter.</div>`;
                      return;
                 }
 
@@ -108,7 +97,7 @@
             }
 
             function renderQuestions() {
-                 questionWrapper.innerHTML = testQuestions.map((q, index) => `
+                questionWrapper.innerHTML = testQuestions.map((q, index) => `
                     <div class="swiper-slide" data-question-id="${q.id}" data-question-index="${index}">
                         <div class="question-content">
                             <p class="question-number">Q${index + 1}</p>
@@ -136,48 +125,47 @@
 
             function initializeTest() {
                 startTimer();
-                const swiper = new Swiper('.swiper', { on: { slideChange: function () { if (this.isEnd) submitButton.style.display = 'block'; else submitButton.style.display = 'none'; } } });
+                const swiper = new Swiper('.swiper', {
+                    on: {
+                        slideChange: function () {
+                            if (this.isEnd) submitButton.style.display = 'block';
+                            else submitButton.style.display = 'none';
+                        }
+                    }
+                });
 
                 questionWrapper.addEventListener('click', (e) => {
                     const selectedOption = e.target.closest('.option-button');
                     if (!selectedOption) return;
+
                     const slide = selectedOption.closest('.swiper-slide');
                     userAnswers[slide.dataset.questionId] = selectedOption.dataset.option;
+
                     slide.querySelectorAll('.option-button').forEach(btn => btn.classList.remove('selected'));
                     selectedOption.classList.add('selected');
+                    
                     if (!swiper.isEnd) setTimeout(() => swiper.slideNext(), 300);
                 });
 
                 submitButton.addEventListener('click', () => {
                     clearInterval(timerInterval);
                     const timeTaken = Math.floor((Date.now() - startTime) / 1000);
+
                     let score = 0;
-                    
-                    const improvementData = JSON.parse(localStorage.getItem('improvementBookData') || '{}');
-                    if (!improvementData[chapterCode]) {
-                        improvementData[chapterCode] = { mistakes: [] };
-                    }
-                    let chapterMistakes = new Set(improvementData[chapterCode].mistakes);
-
                     testQuestions.forEach(q => {
-                        const userAnswer = userAnswers[q.id];
-                        if (userAnswer === q.correctAnswer) {
-                            score++;
-                            if (mode === 'reattempt') {
-                                chapterMistakes.delete(q.id);
-                            }
-                        } else if (userAnswer) {
-                            chapterMistakes.add(q.id);
-                        }
+                        if (userAnswers[q.id] === q.correctAnswer) score++;
                     });
+                    
+                    const results = {
+                        score,
+                        totalQuestions: testQuestions.length,
+                        attemptedQuestions: Object.keys(userAnswers).length,
+                        timeTaken,
+                        chapterName: chapterInfo.chapter,
+                        testData: testQuestions,
+                        userAnswers: userAnswers,
+                    };
 
-                    improvementData[chapterCode].mistakes = Array.from(chapterMistakes);
-                    localStorage.setItem('improvementBookData', JSON.stringify(improvementData));
-
-                    // **NEW:** Save the code of the chapter that was just practiced
-                    localStorage.setItem('lastPracticedChapterCode', chapterInfo.code);
-
-                    const results = { score, totalQuestions: testQuestions.length, attemptedQuestions: Object.keys(userAnswers).length, timeTaken, chapterName: chapterInfo.chapter, chapterCode: chapterInfo.code, testData: testQuestions, userAnswers: userAnswers };
                     localStorage.setItem('lastTestResults', JSON.stringify(results));
                     window.location.href = '2.html';
                 });
