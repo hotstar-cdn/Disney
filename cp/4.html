@@ -5,153 +5,149 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Improvement Book</title>
     <style>
-        :root {
-            --primary-blue: #0d6efd;
-            --light-gray: #f0f2f5;
-            --text-primary: #1c1e21;
-            --text-secondary: #606770;
-        }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--light-gray); margin: 0; }
-        .page-container { max-width: 600px; margin: auto; background-color: white; min-height: 100vh; }
-        .page-header { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #e0e0e0; background: white; }
-        .back-arrow { font-size: 24px; color: var(--text-primary); text-decoration: none; margin-right: 15px; }
-        .header-title h1 { font-size: 1.25rem; margin: 0; color: var(--text-primary); }
-        .header-title p { font-size: 0.9rem; margin: 2px 0 0; color: var(--text-secondary); }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        .main-container { max-width: 800px; margin: auto; }
+        h1 { color: #1c1e21; }
+        .empty-state { text-align: center; margin-top: 50px; color: #606770; background-color: #fff; padding: 40px; border-radius: 8px; }
         
-        .content-area { padding: 20px 15px; background-color: var(--light-gray); }
-        .module-section { margin-bottom: 30px; }
-        .module-section-title { font-size: 1rem; font-weight: 600; color: var(--text-secondary); margin: 0 0 10px; text-transform: uppercase; }
-        
-        .module-card { background: white; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .module-header { display: flex; align-items: center; padding: 15px; cursor: pointer; }
-        .module-icon { width: 40px; height: 40px; margin-right: 15px; }
-        .module-name { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); flex-grow: 1; }
-        .module-toggle { font-size: 1.5rem; color: var(--primary-blue); transition: transform 0.3s; }
-        .module-card.open .module-toggle { transform: rotate(180deg); }
-        
-        .module-details { padding: 0 15px 15px; max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out, padding 0.4s ease-out; }
-        .module-card.open .module-details { max-height: 200px; }
-        .mistake-info { font-size: 1rem; color: var(--text-secondary); margin-bottom: 15px; }
-        .mistake-info b { color: var(--text-primary); }
-        
-        .action-buttons { display: flex; gap: 10px; }
-        .action-buttons button { flex: 1; padding: 10px; font-size: 1rem; font-weight: 600; border-radius: 8px; border: 1px solid var(--primary-blue); cursor: pointer; }
-        .btn-revise { background-color: #fff; color: var(--primary-blue); }
-        .btn-reattempt { background-color: var(--primary-blue); color: #fff; }
-        
-        .empty-state { text-align: center; padding: 50px 20px; color: var(--text-secondary); }
+        /* Accordion Styles for each test */
+        .test-entry { background-color: #fff; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .test-summary { cursor: pointer; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .test-summary:hover { background-color: #f7f7f7; }
+        .test-summary h2 { margin: 0; font-size: 1.2rem; color: #1c1e21; }
+        .test-summary .date { font-size: 0.9rem; color: #606770; }
+        .test-details { padding: 0 20px 20px 20px; border-top: 1px solid #dddfe2; }
+        .test-details p { margin-top: 0; }
+        .wrong-question-list { list-style: none; padding: 0; }
+        .wrong-question-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #e9ebee; }
+        .wrong-question-item:last-child { border-bottom: none; }
+        .wrong-question-text { flex-grow: 1; margin-right: 15px; }
+        .review-btn, .reattempt-btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+        .review-btn { background-color: #e7f3ff; color: #1877f2; }
+        .reattempt-btn { background-color: #42b72a; color: white; text-decoration: none; display: inline-block; margin-top: 15px; }
+
+        /* Modal from 3.html (reused) */
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 30px; border: 1px solid #888; width: 90%; max-width: 600px; border-radius: 10px; position: relative; }
+        .close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; position: absolute; top: 10px; right: 20px; }
+        .close-button:hover, .close-button:focus { color: black; text-decoration: none; cursor: pointer; }
+        .modal-question { font-size: 1.2rem; font-weight: 500; margin-bottom: 20px; }
+        .modal-options .option { padding: 12px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ccc; }
+        .modal-options .option.correct { background-color: #e9f6ec; border-color: #31a24c; }
+        .modal-options .option.incorrect { background-color: #fdeeee; border-color: #fa383e; }
+        .solution-box { margin-top: 25px; padding: 20px; background-color: #f0f2f5; border-radius: 8px; }
+        .solution-box h3 { margin-top: 0; color: #1c1e21; }
     </style>
 </head>
 <body>
 
-    <div class="page-container">
-        <header class="page-header">
-            <a href="#" class="back-arrow" onclick="history.back(); return false;">←</a>
-            <div class="header-title">
-                <h1>Improvement Book</h1>
-                <p>Re-attempt your mistakes and improve</p>
-            </div>
-        </header>
-
-        <main class="content-area" id="content-area">
-            <section class="module-section" id="last-practiced-section">
-                <h2 class="module-section-title">Last Practiced Module</h2>
-                <div id="last-practiced-container"></div>
-            </section>
-            
-            <section class="module-section" id="previous-modules-section">
-                <h2 class="module-section-title">Previous Modules</h2>
-                <div id="previous-modules-container"></div>
-            </section>
-        </main>
+    <div class="main-container" id="main-container">
+        <h1>Improvement Book</h1>
+        <div id="tests-container">
+            <!-- Test entries will be injected here -->
+        </div>
     </div>
 
-    <script src="data.js"></script>
+    <!-- The Modal -->
+    <div id="question-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="close-modal">×</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const lastPracticedContainer = document.getElementById('last-practiced-container');
-            const previousModulesContainer = document.getElementById('previous-modules-container');
-            const lastPracticedSection = document.getElementById('last-practiced-section');
-            const previousModulesSection = document.getElementById('previous-modules-section');
-            const contentArea = document.getElementById('content-area');
+            const testsContainer = document.getElementById('tests-container');
+            const mainContainer = document.getElementById('main-container');
+            const modal = document.getElementById('question-modal');
+            const modalBody = document.getElementById('modal-body');
+            const closeModalBtn = document.getElementById('close-modal');
 
-            const improvementData = JSON.parse(localStorage.getItem('improvementBookData') || '{}');
-            const lastPracticedChapterCode = localStorage.getItem('lastPracticedChapterCode');
+            const bookData = JSON.parse(localStorage.getItem('improvementBookData')) || [];
 
-            const chaptersWithMistakes = chapters.filter(c => 
-                improvementData[c.code] && improvementData[c.code].mistakes.length > 0
-            );
-
-            if (chaptersWithMistakes.length === 0) {
-                contentArea.innerHTML = `<div class="empty-state">Your Improvement Book is empty. Keep practicing to find and fix your mistakes!</div>`;
-                return;
-            }
-            
-            let lastPracticedHtml = '';
-            let previousHtml = '';
-
-            const createModuleCard = (chapter) => {
-                const mistakeCount = improvementData[chapter.code].mistakes.length;
-                return `
-                    <div class="module-card">
-                        <div class="module-header">
-                            <svg class="module-icon" viewBox="0 0 24 24"><path fill="#6c5ce7" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12C20,13.6 19.3,15.1 18.2,16.2L6.8,4.8C7.9,3.7 9.4,3 11,3H12M4,12A8,8 0 0,1 12,4C11.5,4 11.1,4 10.7,4.1L5.9,8.9C5.9,8.9 5.8,9 5.8,9.1C5.3,10 5,11 5,12A8,8 0 0,1 4,12Z" /></svg>
-                            <span class="module-name">${chapter.chapter}</span>
-                            <span class="module-toggle">∨</span>
-                        </div>
-                        <div class="module-details">
-                            <p class="mistake-info"><b>${mistakeCount}</b> Mistakes</p>
-                            <div class="action-buttons">
-                                <button class="btn-revise" data-code="${chapter.code}">Revise</button>
-                                <button class="btn-reattempt" data-code="${chapter.code}">Re-attempt</button>
-                            </div>
-                        </div>
+            if (bookData.length === 0) {
+                mainContainer.innerHTML += `
+                    <div class="empty-state">
+                        <h2>Your Improvement Book is Empty!</h2>
+                        <p>Any questions you answer incorrectly will be saved here for you to review.</p>
                     </div>
                 `;
-            };
+                return;
+            }
 
-            chaptersWithMistakes.forEach(chapter => {
-                const cardHtml = createModuleCard(chapter);
-                if (chapter.code === lastPracticedChapterCode) {
-                    lastPracticedHtml += cardHtml;
-                } else {
-                    previousHtml += cardHtml;
-                }
+            // Display most recent tests first
+            bookData.reverse().forEach(testEntry => {
+                const testElement = document.createElement('details');
+                testElement.className = 'test-entry';
+                
+                let wrongQuestionsHtml = testEntry.wrongQuestions.map((q, index) => `
+                    <li class="wrong-question-item">
+                        <span class="wrong-question-text">${index + 1}. ${q.question.split('\n')[0]}</span>
+                        <button class="review-btn" data-testid="${testEntry.testId}" data-qid="${q.id}">Review</button>
+                    </li>
+                `).join('');
+
+                testElement.innerHTML = `
+                    <summary class="test-summary">
+                        <h2>${testEntry.chapterName}</h2>
+                        <span class="date">${testEntry.date}</span>
+                    </summary>
+                    <div class="test-details">
+                        <p>You made ${testEntry.wrongQuestions.length} mistakes in this test.</p>
+                        <ul class="wrong-question-list">${wrongQuestionsHtml}</ul>
+                        <a href="1.html?code=${testEntry.chapterCode}&count=${testEntry.totalQuestionsInTest}" class="reattempt-btn">Re-attempt Test</a>
+                    </div>
+                `;
+                testsContainer.appendChild(testElement);
             });
 
-            if (lastPracticedHtml) {
-                lastPracticedContainer.innerHTML = lastPracticedHtml;
-            } else {
-                lastPracticedSection.style.display = 'none';
-            }
+            // Event Delegation for Review Buttons
+            testsContainer.addEventListener('click', e => {
+                if (e.target.classList.contains('review-btn')) {
+                    const testId = e.target.dataset.testid;
+                    const questionId = e.target.dataset.qid;
 
-            if (previousHtml) {
-                previousModulesContainer.innerHTML = previousHtml;
-            } else {
-                previousModulesSection.style.display = 'none';
-            }
-
-            contentArea.addEventListener('click', (e) => {
-                const header = e.target.closest('.module-header');
-                if (header) {
-                    header.parentElement.classList.toggle('open');
-                }
-
-                if (e.target.matches('.btn-reattempt')) {
-                    const code = e.target.dataset.code;
-                    window.location.href = `1.html?mode=reattempt&code=${code}`;
-                }
-
-                if (e.target.matches('.btn-revise')) {
-                    const lastResult = JSON.parse(localStorage.getItem('lastTestResults'));
-                    const code = e.target.dataset.code;
-                    if(lastResult && lastResult.chapterCode === code){
-                         window.location.href = `3.html`;
-                    } else {
-                        alert("Please attempt this chapter's test first to revise the latest mistakes.");
+                    // Find the specific question data
+                    const test = bookData.find(t => t.testId === testId);
+                    const questionData = test.wrongQuestions.find(q => q.id === questionId);
+                    
+                    if (questionData) {
+                        displayQuestionInModal(questionData);
                     }
                 }
             });
+
+            function displayQuestionInModal(qData) {
+                let optionsHtml = '';
+                for (const key in qData.options) {
+                    let optionClass = '';
+                    if (key === qData.correctAnswer) {
+                        optionClass = 'correct';
+                    } else if (key === qData.userAnswer) {
+                        optionClass = 'incorrect';
+                    }
+                    optionsHtml += `<div class="option ${optionClass}">${key}: ${qData.options[key]}</div>`;
+                }
+
+                modalBody.innerHTML = `
+                    <p class="modal-question">${qData.question.replace(/\n/g, '<br>')}</p>
+                    <div class="modal-options">${optionsHtml}</div>
+                    <div class="solution-box">
+                        <h3>Solution</h3>
+                        <p>${qData.solution.replace(/\n/g, '<br>')}</p>
+                    </div>
+                `;
+                modal.style.display = 'block';
+            }
+            
+            // Modal closing logic
+            closeModalBtn.onclick = () => modal.style.display = "none";
+            window.onclick = (event) => {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            };
         });
     </script>
 </body>
