@@ -1,367 +1,222 @@
+<!-- 1.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Allie - AI Chat</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Flashcards</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
     <style>
-        /* CSS is identical to the previous version, so it's kept for brevity. */
-        /* You can paste the CSS from the previous response here. */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
         :root {
-            --body-bg: #f0f2f5;
-            --chat-bg: linear-gradient(180deg, #e6e9ff 0%, #f0f3ff 100%);
-            --header-bg: #ffffff;
-            --input-bg: #ffffff;
-            --user-bubble-bg: #007bff;
-            --user-bubble-text: #ffffff;
-            --bot-bubble-bg: #ffffff;
-            --bot-bubble-text: #333333;
-            --primary-font: 'Poppins', sans-serif;
-            --text-color: #333;
-            --border-color: #e0e0e0;
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --orange: #fb923c; --green: #10b981; --background: #f0f7ff;
+            --text-dark: #1e293b; --text-light: #64748b; --card-bg: #ffffff;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: var(--primary-font);
-            background-color: var(--body-bg);
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; margin: 0; background-color: var(--background); color: var(--text-dark); overflow: hidden; }
+        .app-wrapper { display: flex; flex-direction: column; height: 100vh; }
+        .app-header { padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .header-info h1 { font-size: 1.25rem; font-weight: 700; margin: 0; }
+        .header-info p { font-size: 0.875rem; color: var(--text-light); margin: 0.25rem 0 0 0; }
+        #close-btn { width: 36px; height: 36px; border-radius: 50%; background-color: #e2e8f0; border: none; font-size: 1.5rem; color: var(--text-light); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        
+        /* Card Stack Area */
+        .card-area {
+            flex-grow: 1;
             display: flex;
-            justify-content: center;
             align-items: center;
-            height: 100vh;
-            color: var(--text-color);
+            justify-content: center;
+            padding: 0 1.5rem 5rem; /* Add padding at bottom for stack effect */
+            position: relative;
         }
-
-        .chat-container {
+        .flashcard {
             width: 100%;
-            max-width: 420px;
-            height: 95vh;
-            max-height: 800px;
-            background: var(--header-bg);
-            border-radius: 24px;
-            box-shadow: var(--shadow);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .chat-header {
-            display: flex;
-            align-items: center;
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border-color);
-            background-color: var(--header-bg);
-            flex-shrink: 0;
-        }
-
-        .chat-header .back-arrow {
-            font-size: 24px;
-            font-weight: bold;
+            max-width: 400px;
+            height: 60vh;
+            max-height: 450px;
+            position: absolute; /* IMPORTANT for stacking */
+            transform-style: preserve-3d;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s;
             cursor: pointer;
-            margin-right: 16px;
-            color: #555;
+            will-change: transform, opacity;
         }
-        
-        .chat-header h1 {
-            font-size: 18px;
-            font-weight: 600;
-            text-align: center;
-            flex-grow: 1;
-            margin-right: 40px;
+        .flashcard.flipped { transform: rotateY(180deg); }
+        .card-face {
+            position: absolute; height: 100%; width: 100%;
+            backface-visibility: hidden; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; padding: 2rem;
+            background-color: var(--card-bg); border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1); text-align: center;
         }
+        .card-back { transform: rotateY(180deg); }
+        .question-text { font-size: 1.75rem; font-weight: 500; line-height: 1.4; }
+        .answer-text { font-size: 1.5rem; }
+        #hint-btn { background: none; border: none; color: #007bff; font-weight: 500; font-size: 0.875rem; letter-spacing: 0.5px; cursor: pointer; margin-top: auto; padding: 10px; }
+        .hint-text { font-style: italic; color: var(--text-light); margin-top: 1rem; font-size: 1rem; }
         
-        .chat-messages {
-            flex-grow: 1;
-            padding: 20px;
-            background: var(--chat-bg);
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
+        /* Swipe Out Animations */
+        .flashcard.swiped-right { animation: swipe-right 0.5s forwards ease-in-out; }
+        .flashcard.swiped-left { animation: swipe-left 0.5s forwards ease-in-out; }
+        @keyframes swipe-right { to { transform: translateX(400px) rotate(25deg); opacity: 0; } }
+        @keyframes swipe-left { to { transform: translateX(-400px) rotate(-25deg); opacity: 0; } }
         
-        .chat-messages::-webkit-scrollbar { width: 6px; }
-        .chat-messages::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
-        .chat-messages::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
-
-        .welcome-view {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            text-align: center;
-            animation: fadeIn 0.5s ease-in-out;
-        }
-
-        .welcome-view p { font-size: 18px; color: #555; margin-top: 20px; }
-        
-        .allie-avatar-svg {
-            width: 120px;
-            height: 120px;
-            filter: drop-shadow(0px 0px 15px rgba(130, 180, 255, 0.7));
-            animation: glow 3s infinite ease-in-out;
-        }
-
-        .allie-avatar-svg .sparkle { animation: sparkle-anim 2.5s infinite ease-in-out; }
-        .allie-avatar-svg .sparkle:nth-child(2) { animation-delay: -0.5s; }
-        .allie-avatar-svg .sparkle:nth-child(3) { animation-delay: -1s; }
-        .allie-avatar-svg .sparkle:nth-child(4) { animation-delay: -1.5s; }
-
-        @keyframes glow {
-            0%, 100% { filter: drop-shadow(0px 0px 15px rgba(130, 180, 255, 0.7)); transform: scale(1); }
-            50% { filter: drop-shadow(0px 0px 25px rgba(180, 150, 255, 0.9)); transform: scale(1.02); }
-        }
-
-        @keyframes sparkle-anim {
-            0%, 100% { opacity: 0; transform: scale(0.5) translateY(0); }
-            50% { opacity: 1; transform: scale(1) translateY(-10px); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .message-wrapper { display: flex; margin-bottom: 15px; animation: fadeIn 0.3s ease-out; }
-        
-        .message-bubble { max-width: 75%; padding: 12px 18px; border-radius: 20px; line-height: 1.5; font-size: 15px; }
-        
-        .bot-message .message-bubble { background-color: var(--bot-bubble-bg); color: var(--bot-bubble-text); border-top-left-radius: 5px; }
-        
-        .user-message { justify-content: flex-end; }
-        
-        .user-message .message-bubble { background-color: var(--user-bubble-bg); color: var(--user-bubble-text); border-top-right-radius: 5px; }
-        
-        .message-wrapper .avatar-in-chat { width: 36px; height: 36px; margin-right: 12px; flex-shrink: 0; filter: drop-shadow(0px 0px 5px rgba(130, 180, 255, 0.5)); }
-
-        .typing-indicator { display: flex; align-items: center; }
-        .typing-indicator span { height: 8px; width: 8px; margin: 0 2px; background-color: #9db2d0; border-radius: 50%; display: inline-block; animation: bob 1.4s infinite ease-in-out both; }
-        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes bob { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
-
-        .message-form { display: flex; align-items: center; padding: 12px 20px; background-color: var(--input-bg); flex-shrink: 0; border-top: 1px solid var(--border-color); }
-
-        .message-form button { border: none; background: none; cursor: pointer; padding: 8px; display: flex; align-items: center; justify-content: center; }
-        
-        .image-button { border: 1px solid var(--border-color); border-radius: 12px; padding: 8px 12px; font-size: 14px; color: #555; font-family: var(--primary-font); margin-right: 12px; transition: background-color 0.2s; }
-        .image-button:hover { background-color: #f0f0f0; }
-        .image-button svg { width: 20px; height: 20px; margin-right: 6px; }
-
-        .message-input { flex-grow: 1; border: none; outline: none; padding: 10px; font-size: 16px; background: transparent; font-family: var(--primary-font); }
-
-        .send-button { background-color: #f0f2f5; border-radius: 50%; width: 40px; height: 40px; transition: background-color 0.2s; }
-        .send-button.active { background-color: var(--user-bubble-bg); }
-        .send-button svg { width: 20px; height: 20px; fill: #aaa; transition: fill 0.2s; }
-        .send-button.active svg { fill: white; }
+        .controls-footer { padding: 1.5rem; display: flex; gap: 1rem; justify-content: center; flex-shrink: 0; }
+        .control-btn { flex-grow: 1; max-width: 200px; padding: 1rem; border-radius: 999px; font-size: 1rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s, color 0.2s; background-color: var(--card-bg); }
+        .btn-learning { border: 2px solid var(--orange); color: var(--orange); }
+        .btn-know { border: 2px solid var(--green); color: var(--green); }
     </style>
 </head>
 <body>
-
-    <div class="chat-container">
-        <header class="chat-header">
-            <span class="back-arrow">←</span>
-            <h1>Allie</h1>
+    <div class="app-wrapper" id="main-container">
+        <header class="app-header">
+            <div class="header-info">
+                <h1 id="chapter-title">Loading...</h1>
+                <p id="progress-counter">Loading cards...</p>
+            </div>
+            <button id="close-btn">×</button>
         </header>
-        <main class="chat-messages" id="chat-messages"></main>
-        <form class="message-form" id="message-form">
-            <button type="button" class="image-button">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path></svg>
-                Image
-            </button>
-            <input type="text" id="message-input" class="message-input" placeholder="Type here" autocomplete="off">
-            <button type="submit" id="send-button" class="send-button">
-                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
-            </button>
-        </form>
+
+        <main class="card-area" id="card-area">
+            <!-- Card stack will be injected here -->
+        </main>
+
+        <footer class="controls-footer">
+            <button id="learn-btn" class="control-btn btn-learning">Still learning</button>
+            <button id="know-btn" class="control-btn btn-know">I know this</button>
+        </footer>
     </div>
 
-    <svg id="allie-avatar-template" style="display: none;" class="allie-avatar-svg" viewBox="0 0 100 100">
-        <defs>
-            <radialGradient id="allie-gradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                <stop offset="0%" style="stop-color:rgb(218, 233, 255); stop-opacity:1" />
-                <stop offset="60%" style="stop-color:rgb(167, 185, 255); stop-opacity:1" />
-                <stop offset="100%" style="stop-color:rgb(161, 226, 229); stop-opacity:1" />
-            </radialGradient>
-        </defs>
-        <path class="sparkle" d="M5,0 L6,4 L10,5 L6,6 L5,10 L4,6 L0,5 L4,4 Z" fill="#82eefd" transform="translate(15, 15) scale(0.8)"/>
-        <path class="sparkle" d="M5,0 L6,4 L10,5 L6,6 L5,10 L4,6 L0,5 L4,4 Z" fill="#cfaaff" transform="translate(80, 20) scale(1)"/>
-        <path class="sparkle" d="M5,0 L6,4 L10,5 L6,6 L5,10 L4,6 L0,5 L4,4 Z" fill="#82eefd" transform="translate(85, 75) scale(0.7)"/>
-        <path class="sparkle" d="M5,0 L6,4 L10,5 L6,6 L5,10 L4,6 L0,5 L4,4 Z" fill="#cfaaff" transform="translate(10, 80) scale(0.9)"/>
-        <path d="M50 10 C 20 10, 10 20, 10 50 C 10 80, 20 90, 50 90 C 80 90, 90 80, 90 50 C 90 20, 80 10, 50 10 Z" fill="url(#allie-gradient)"/>
-        <circle cx="38" cy="45" r="4" fill="#333"/>
-        <circle cx="62" cy="45" r="4" fill="#333"/>
-        <path d="M42 63 Q 50 70, 58 63" stroke="#333" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    </svg>
-
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+    <script src="firebase-init.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('message-form');
-            const input = document.getElementById('message-input');
-            const sendButton = document.getElementById('send-button');
-            const messagesContainer = document.getElementById('chat-messages');
-            const avatarTemplate = document.getElementById('allie-avatar-template');
+        const mainContainer = document.getElementById('main-container');
+        const chapterTitleEl = document.getElementById('chapter-title');
+        const progressCounterEl = document.getElementById('progress-counter');
+        const cardArea = document.getElementById('card-area');
+        const knowBtn = document.getElementById('know-btn');
+        const learnBtn = document.getElementById('learn-btn');
+        const closeBtn = document.getElementById('close-btn');
 
-            // --- START OF NEW/MODIFIED SECTION ---
-            // ==========================================
-            //       !!! PASTE YOUR NEW API KEY HERE !!!
-            // ==========================================
-            const API_KEY = "AIzaSyBjjBG-Jm2JsyIBn5DfgbvPw7Ua0p_3N0c"; 
-            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyBjjBG-Jm2JsyIBn5DfgbvPw7Ua0p_3N0c`;
-            
-            // --- UI Helper Functions (mostly unchanged) ---
-            const getAvatarSVG = (className = 'allie-avatar-svg') => {
-                const clone = avatarTemplate.cloneNode(true);
-                clone.removeAttribute('id');
-                clone.classList.add(...className.split(' '));
-                return clone;
-            };
+        let allCards = [];
+        let currentIndex = 0;
+        let knowCount = 0;
+        let learningCount = 0;
+        let isAnimating = false;
 
-            const displayWelcomeMessage = () => {
-                messagesContainer.innerHTML = `
-                    <div class="welcome-view">
-                        ${getAvatarSVG().outerHTML}
-                        <p>Ask me anything!</p>
-                    </div>
-                `;
-            }
+        function createCardElement(cardData) {
+            const cardEl = document.createElement('div');
+            cardEl.className = 'flashcard';
+            cardEl.innerHTML = `
+                <div class="card-face card-front">
+                    <p class="question-text">${cardData.question}</p>
+                    ${cardData.hint ? `<button class="hint-btn">SHOW A HINT</button>` : ''}
+                </div>
+                <div class="card-face card-back">
+                    <p class="answer-text">${cardData.answer}</p>
+                    ${cardData.hint ? `<p class="hint-text">Hint: ${cardData.hint}</p>` : ''}
+                </div>`;
+            return cardEl;
+        }
 
-            const scrollToBottom = () => {
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }
+        function renderCardStack() {
+            cardArea.innerHTML = '';
+            const cardsToShow = allCards.slice(currentIndex, currentIndex + 3).reverse();
 
-            const toggleSendButton = () => {
-                sendButton.classList.toggle('active', input.value.trim() !== '');
-            };
-            
-            const displayMessage = (text, sender) => {
-                if (document.querySelector('.welcome-view')) {
-                    messagesContainer.innerHTML = '';
-                }
-                const wrapper = document.createElement('div');
-                wrapper.className = `message-wrapper ${sender}-message`;
-                const bubble = document.createElement('div');
-                bubble.className = 'message-bubble';
-                bubble.textContent = text;
-                
-                if (sender === 'bot') {
-                    wrapper.appendChild(getAvatarSVG('avatar-in-chat'));
-                    wrapper.appendChild(bubble);
-                } else {
-                    wrapper.appendChild(bubble);
-                }
-                
-                messagesContainer.appendChild(wrapper);
-                scrollToBottom();
-            }
+            cardsToShow.forEach((cardData, indexInStack) => {
+                const cardEl = createCardElement(cardData);
+                const stackPosition = cardsToShow.length - 1 - indexInStack;
 
-            const showTypingIndicator = () => {
-                if (document.querySelector('.welcome-view')) {
-                    messagesContainer.innerHTML = '';
-                }
-                if (document.querySelector('.typing-indicator-wrapper')) return; // Already showing
+                // Style the card based on its position in the stack
+                cardEl.style.transform = `scale(${1 - (stackPosition * 0.05)}) translateY(${stackPosition * -15}px)`;
+                cardEl.style.zIndex = allCards.length - indexInStack;
+                cardEl.style.opacity = '1';
 
-                const wrapper = document.createElement('div');
-                wrapper.className = 'message-wrapper bot-message typing-indicator-wrapper';
-                const bubble = document.createElement('div');
-                bubble.className = 'message-bubble typing-indicator';
-                bubble.innerHTML = `<span></span><span></span><span></span>`;
-                
-                wrapper.appendChild(getAvatarSVG('avatar-in-chat'));
-                wrapper.appendChild(bubble);
-                
-                messagesContainer.appendChild(wrapper);
-                scrollToBottom();
-            }
+                cardArea.appendChild(cardEl);
 
-            const hideTypingIndicator = () => {
-                document.querySelector('.typing-indicator-wrapper')?.remove();
-            }
-
-            // --- Gemini API Call (UPDATED) ---
-            const callGeminiAPI = async (userMessage) => {
-                showTypingIndicator();
-
-                try {
-                    const requestBody = {
-                        contents: [{
-                            parts: [{
-                                text: userMessage
-                            }]
-                        }],
-                        // Optional: Add safety settings
-                        safetySettings: [
-                            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                        ]
-                    };
-
-                    const response = await fetch(API_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(requestBody)
+                // Add listeners only to the top card
+                if (stackPosition === 0) {
+                    cardEl.addEventListener('click', () => {
+                        if (!isAnimating) cardEl.classList.toggle('flipped');
                     });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error.message || 'Network response was not ok');
+                    const hintBtn = cardEl.querySelector('.hint-btn');
+                    if(hintBtn) {
+                        hintBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            cardEl.querySelector('.hint-text').style.display = 'block';
+                            hintBtn.style.display = 'none';
+                        });
                     }
 
-                    const data = await response.json();
-                    
-                    hideTypingIndicator();
-
-                    // Extract text from the response
-                    const botResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if (botResponse) {
-                        displayMessage(botResponse, 'bot');
-                    } else {
-                        // Handle cases where the response is blocked or empty
-                        displayMessage("I'm sorry, I couldn't generate a response for that. Please try something else.", 'bot');
-                    }
-
-                } catch (error) {
-                    console.error('Error calling Gemini API:', error);
-                    hideTypingIndicator();
-                    displayMessage(`Sorry, an error occurred: ${error.message}`, 'bot');
-                }
-            }
-            // --- END OF NEW/MODIFIED SECTION ---
-            
-
-            // --- Event Listeners ---
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const userMessage = input.value.trim();
-
-                if (userMessage) {
-                    if (API_KEY === "AIzaSyBjjBG-Jm2JsyIBn5DfgbvPw7Ua0p_3N0c") {
-                        displayMessage("Please add your API key to the code first!", 'bot');
-                        return;
-                    }
-                    displayMessage(userMessage, 'user');
-                    callGeminiAPI(userMessage);
-                    input.value = '';
-                    toggleSendButton();
+                    const hammer = new Hammer(cardEl);
+                    hammer.on('swiperight', handleKnow);
+                    hammer.on('swipeleft', handleLearn);
                 }
             });
+        }
 
-            input.addEventListener('input', toggleSendButton);
+        function processSwipe(direction) {
+            if (isAnimating) return;
+            isAnimating = true;
 
-            // --- Initial State ---
-            displayWelcomeMessage();
+            const activeCard = cardArea.querySelector('.flashcard:last-child');
+            if (!activeCard) return;
+
+            if (direction === 'know') {
+                knowCount++;
+                activeCard.classList.add('swiped-right');
+            } else {
+                learningCount++;
+                activeCard.classList.add('swiped-left');
+            }
+            
+            currentIndex++;
+            progressCounterEl.textContent = `${currentIndex + 1 > allCards.length ? allCards.length : currentIndex + 1} of ${allCards.length} cards`;
+
+            setTimeout(() => {
+                if (currentIndex >= allCards.length) {
+                    goToScorePage();
+                } else {
+                    renderCardStack();
+                    isAnimating = false;
+                }
+            }, 500); // Match animation duration
+        }
+
+        const handleKnow = () => processSwipe('know');
+        const handleLearn = () => processSwipe('learn');
+
+        function goToScorePage() {
+            localStorage.setItem('knowCount', knowCount);
+            localStorage.setItem('learningCount', learningCount);
+            window.location.href = '2.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const code = new URLSearchParams(window.location.search).get('code');
+            if (!code) { mainContainer.innerHTML = '<h1>Error: No code found in URL.</h1>'; return; }
+            localStorage.setItem('lastCode', code);
+
+            try {
+                const docSnap = await db.collection('flashcardSets').doc(code).get();
+                if (docSnap.exists) {
+                    const data = docSnap.data();
+                    chapterTitleEl.textContent = data.chapter;
+                    allCards = data.cards || [];
+                    progressCounterEl.textContent = `1 of ${allCards.length} cards`;
+                    renderCardStack();
+                } else {
+                     mainContainer.innerHTML = '<h1>Error: Set not found for this code.</h1>';
+                }
+            } catch (error) {
+                console.error("Error fetching document:", error);
+                mainContainer.innerHTML = '<h1>Error loading flashcards.</h1>';
+            }
         });
+
+        knowBtn.addEventListener('click', handleKnow);
+        learnBtn.addEventListener('click', handleLearn);
+        closeBtn.addEventListener('click', () => { window.location.href = 'index.html'; });
     </script>
 </body>
 </html>
