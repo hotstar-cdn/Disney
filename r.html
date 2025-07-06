@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student & Teacher Portal</title>
+  <meta charset="UTF-8" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .tab-button {
+      padding: 10px 20px;
+      margin: 0 10px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .tab-button.active {
+      background-color: #0056b3;
+    }
+
+    .portal {
+      display: none;
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    .portal.active {
+      display: block;
+    }
+
+    input, select, button {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    #resultsTable {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    #resultsTable th, #resultsTable td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+
+    #resultsTable th {
+      background-color: #007bff;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Student & Teacher Portal</h1>
+
+  <div class="tabs">
+    <button class="tab-button active" onclick="showTab('teacher')">Teacher Portal</button>
+    <button class="tab-button" onclick="showTab('student')">Student Portal</button>
+  </div>
+
+  <!-- Teacher Portal -->
+  <div id="teacher" class="portal active">
+    <h2>Add Student Result</h2>
+    <input type="text" id="studentName" placeholder="Student Name">
+    <input type="text" id="subject" placeholder="Subject">
+    <input type="number" id="marks" placeholder="Marks">
+    <button onclick="addResult()">Submit</button>
+    <p id="teacherMsg"></p>
+  </div>
+
+  <!-- Student Portal -->
+  <div id="student" class="portal">
+    <h2>View Results</h2>
+    <input type="text" id="searchName" placeholder="Enter your name">
+    <button onclick="getResults()">Search</button>
+    <table id="resultsTable" style="display:none;">
+      <thead>
+        <tr><th>Subject</th><th>Marks</th></tr>
+      </thead>
+      <tbody id="resultsBody"></tbody>
+    </table>
+    <p id="studentMsg"></p>
+  </div>
+
+  <!-- Firebase and App JS -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCbnM2-F_MgLKFm6qt4zAOQ8czPzQY0Koc",
+      authDomain: "edulearn-live-class-datasets.firebaseapp.com",
+      projectId: "edulearn-live-class-datasets",
+      storageBucket: "edulearn-live-class-datasets.appspot.com",
+      messagingSenderId: "599551118203",
+      appId: "1:599551118203:web:0cfbde334243d3742dcbde",
+      measurementId: "G-JNZSP50J5N"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Tab switcher
+    function showTab(tab) {
+      document.querySelectorAll('.portal').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+      document.getElementById(tab).classList.add('active');
+      document.querySelector(`.tab-button[onclick="showTab('${tab}')"]`).classList.add('active');
+    }
+
+    // Add student result
+    function addResult() {
+      const name = document.getElementById('studentName').value.trim();
+      const subject = document.getElementById('subject').value.trim();
+      const marks = parseInt(document.getElementById('marks').value.trim());
+
+      if (!name || !subject || isNaN(marks)) {
+        document.getElementById('teacherMsg').innerText = "Please fill in all fields.";
+        return;
+      }
+
+      db.collection("results").add({ name, subject, marks })
+        .then(() => {
+          document.getElementById('teacherMsg').innerText = "Result added successfully!";
+          document.getElementById('studentName').value = '';
+          document.getElementById('subject').value = '';
+          document.getElementById('marks').value = '';
+        })
+        .catch(error => {
+          document.getElementById('teacherMsg').innerText = "Error: " + error.message;
+        });
+    }
+
+    // Get results by student name
+    function getResults() {
+      const searchName = document.getElementById('searchName').value.trim();
+      const table = document.getElementById('resultsTable');
+      const tbody = document.getElementById('resultsBody');
+      const msg = document.getElementById('studentMsg');
+
+      tbody.innerHTML = '';
+      msg.innerText = '';
+      table.style.display = 'none';
+
+      if (!searchName) {
+        msg.innerText = "Please enter a name.";
+        return;
+      }
+
+      db.collection("results").where("name", "==", searchName).get()
+        .then(querySnapshot => {
+          if (querySnapshot.empty) {
+            msg.innerText = "No results found.";
+          } else {
+            querySnapshot.forEach(doc => {
+              const data = doc.data();
+              const row = `<tr><td>${data.subject}</td><td>${data.marks}</td></tr>`;
+              tbody.innerHTML += row;
+            });
+            table.style.display = 'table';
+          }
+        })
+        .catch(error => {
+          msg.innerText = "Error: " + error.message;
+        });
+    }
+  </script>
+</body>
+</html>
