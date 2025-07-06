@@ -4,114 +4,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher - Add Flashcards</title>
+    <title>Teacher - Update Flashcards</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8f9fa;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            margin: 0;
-            padding: 2rem;
-            color: #212529;
-        }
-        .container {
-            background: white;
-            padding: 2.5rem;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-            width: 90%;
-            max-width: 500px;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; margin: 0; padding: 2rem; color: #212529; }
+        .container { background: white; padding: 2.5rem; border-radius: 16px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08); width: 90%; max-width: 500px; }
         h1, h2 { color: #212529; font-weight: 700; text-align: center; }
-        h2 { font-size: 1.25rem; margin-top: 2rem; }
+        h2 { font-size: 1.25rem; margin-top: 2rem; border-top: 1px solid #e9ecef; padding-top: 2rem; }
         .form-group { margin-bottom: 1.25rem; }
         label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #495057; }
-        input[type="text"], textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ced4da;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 1rem;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        input[type="text"]:focus, textarea:focus {
-            outline: none;
-            border-color: #80bdff;
-            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-        }
+        input[type="text"], textarea, select { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 8px; box-sizing: border-box; font-size: 1rem; background-color: #fff; }
         textarea { resize: vertical; min-height: 90px; }
-        button {
-            width: 100%;
-            padding: 1rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            color: white;
-            transition: background-color 0.3s, transform 0.2s;
-        }
+        button { width: 100%; padding: 1rem; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; color: white; transition: background-color 0.3s, transform 0.2s; }
         button:hover { transform: translateY(-2px); }
         #add-card-btn { background-color: #007bff; }
-        #save-set-btn { background-color: #28a745; margin-top: 1rem; }
+        #update-set-btn { background-color: #28a745; margin-top: 1rem; }
         #added-cards-list { text-align: left; margin-top: 1.5rem; padding-left: 20px; color: #495057; }
-        #generated-code { margin-top: 2rem; background: #e9ecef; padding: 1rem; border-radius: 8px; font-family: 'Courier New', monospace; font-weight: bold; word-break: break-all; text-align: center; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Create Flashcard Set</h1>
+        <h1>Update Flashcard Set</h1>
         <div class="form-group">
-            <label for="chapter">Chapter / Topic Name</label>
-            <input type="text" id="chapter" placeholder="e.g., Cell: The Unit Of Life">
+            <label for="chapter-select">Choose a Chapter to Update</label>
+            <select id="chapter-select">
+                <option value="">-- Select a Chapter --</option>
+                <!-- Chapters from data.js will be loaded here -->
+            </select>
         </div>
-        <hr>
-        <h2>Add a New Card</h2>
-        <div class="form-group">
-            <label for="question">Question</label>
-            <textarea id="question" placeholder="What is chromatin, and how is it different from chromosomes?"></textarea>
-        </div>
-        <div class="form-group">
-            <label for="answer">Answer</label>
-            <textarea id="answer" placeholder="Chromatin is the relaxed, uncondensed form of DNA..."></textarea>
-        </div>
-        <div class="form-group">
-            <label for="hint">Hint (Optional)</label>
-            <input type="text" id="hint" placeholder="Think about the cell cycle stages...">
-        </div>
-        <button id="add-card-btn">Add Card to Set</button>
-        <button id="save-set-btn">Save Set & Get Code</button>
-        <div id="added-cards-section" style="display:none;">
-            <h3>Cards Added:</h3>
-            <ul id="added-cards-list"></ul>
-        </div>
-        <div id="generated-code" style="display:none;">
-            <h3>Share this code with your administrator:</h3>
-            <p id="code-display"></p>
+
+        <div id="card-creator" style="display: none;">
+            <h2>Add New Cards to this Set</h2>
+            <p style="text-align:center; color:#6c757d; margin-top:-1rem; margin-bottom: 1.5rem;">Note: Updating will replace all old cards for this chapter.</p>
+            <div class="form-group">
+                <label for="question">Question</label>
+                <textarea id="question"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="answer">Answer</label>
+                <textarea id="answer"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="hint">Hint (Optional)</label>
+                <input type="text" id="hint">
+            </div>
+            <button id="add-card-btn">Add Card to Set</button>
+            <button id="update-set-btn">Update Flashcard Set in Database</button>
+
+            <div id="added-cards-section" style="display:none;">
+                <h3>Cards to be added:</h3>
+                <ul id="added-cards-list"></ul>
+            </div>
         </div>
     </div>
+
+    <!-- Firebase and Data -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+    <script src="data.js"></script>
     <script src="firebase-init.js"></script>
+
     <script>
-        const chapterInput = document.getElementById('chapter');
+        const chapterSelect = document.getElementById('chapter-select');
+        const cardCreatorDiv = document.getElementById('card-creator');
         const questionInput = document.getElementById('question');
         const answerInput = document.getElementById('answer');
         const hintInput = document.getElementById('hint');
         const addCardBtn = document.getElementById('add-card-btn');
-        const saveSetBtn = document.getElementById('save-set-btn');
+        const updateSetBtn = document.getElementById('update-set-btn');
         const addedCardsSection = document.getElementById('added-cards-section');
         const addedCardsList = document.getElementById('added-cards-list');
-        const generatedCodeDiv = document.getElementById('generated-code');
-        const codeDisplay = document.getElementById('code-display');
 
         let currentCardSet = [];
 
+        // 1. Populate the dropdown from data.js
+        document.addEventListener('DOMContentLoaded', () => {
+            flashcardSets.forEach(set => {
+                const option = document.createElement('option');
+                option.value = set.code;
+                option.textContent = set.chapterName;
+                chapterSelect.appendChild(option);
+            });
+        });
+
+        // 2. Show the card creator when a chapter is selected
+        chapterSelect.addEventListener('change', () => {
+            if (chapterSelect.value) {
+                cardCreatorDiv.style.display = 'block';
+                // Reset fields when changing chapter
+                currentCardSet = [];
+                addedCardsList.innerHTML = '';
+                addedCardsSection.style.display = 'none';
+            } else {
+                cardCreatorDiv.style.display = 'none';
+            }
+        });
+
+        // 3. Add a card to the temporary list
         addCardBtn.addEventListener('click', () => {
             const question = questionInput.value.trim();
             const answer = answerInput.value.trim();
@@ -132,39 +121,50 @@
             hintInput.value = '';
             questionInput.focus();
         });
+        
+        // 4. Update the database using the pre-defined code
+        updateSetBtn.addEventListener('click', async () => {
+            const code = chapterSelect.value;
+            const chapterName = chapterSelect.options[chapterSelect.selectedIndex].text;
 
-        saveSetBtn.addEventListener('click', async () => {
-            const chapter = chapterInput.value.trim();
-            if (!chapter) {
-                alert('Please enter a chapter name.');
+            if (!code) {
+                alert('This should not happen. A chapter was not selected.');
                 return;
             }
             if (currentCardSet.length === 0) {
-                alert('Please add at least one card to the set.');
+                alert('Please add at least one card to the set before updating.');
                 return;
             }
 
-            const code = 'set-' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-
             try {
-                saveSetBtn.disabled = true;
-                saveSetBtn.textContent = 'Saving...';
+                updateSetBtn.disabled = true;
+                updateSetBtn.textContent = 'Updating...';
+
+                // Use the pre-defined 'code' from the dropdown to update the document
                 await db.collection('flashcardSets').doc(code).set({
-                    chapter: chapter,
+                    chapter: chapterName, // Save the name for display purposes
                     cards: currentCardSet
                 });
                 
-                codeDisplay.textContent = code;
-                generatedCodeDiv.style.display = 'block';
-                saveSetBtn.style.backgroundColor = '#6c757d';
-                saveSetBtn.textContent = 'Saved!';
-                addCardBtn.disabled = true;
-                alert(`Set saved! Provide your administrator with this chapter name and code:\n\nChapter: ${chapter}\nCode: ${code}`);
+                updateSetBtn.style.backgroundColor = '#6c757d';
+                updateSetBtn.textContent = 'Set Updated Successfully!';
+                alert(`Success! The flashcards for "${chapterName}" have been updated.`);
+
+                // Reset after successful update
+                setTimeout(() => {
+                    updateSetBtn.disabled = false;
+                    updateSetBtn.textContent = 'Update Flashcard Set in Database';
+                    updateSetBtn.style.backgroundColor = '#28a745';
+                    currentCardSet = [];
+                    addedCardsList.innerHTML = '';
+                    addedCardsSection.style.display = 'none';
+                }, 2000);
+
             } catch (error) {
-                console.error("Error adding document: ", error);
-                alert('Could not save the set. Please check the console.');
-                saveSetBtn.disabled = false;
-                saveSetBtn.textContent = 'Save Set & Get Code';
+                console.error("Error updating document: ", error);
+                alert('Could not update the set. Please check the console.');
+                updateSetBtn.disabled = false;
+                updateSetBtn.textContent = 'Update Flashcard Set in Database';
             }
         });
     </script>
