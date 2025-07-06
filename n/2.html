@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Teacher Send Notification</title>
+</head>
+<body>
+  <h2>Send Notification</h2>
+  <input id="title" placeholder="Notification Title"><br><br>
+  <textarea id="message" placeholder="Notification Message"></textarea><br><br>
+  <button onclick="sendNotification()">Send</button>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyACTOtqAzcSOrObiSKKkCP1OjA7O0zFLNI",
+      authDomain: "notification-d9b90.firebaseapp.com",
+      projectId: "notification-d9b90",
+      storageBucket: "notification-d9b90.firebasestorage.app",
+      messagingSenderId: "578772393552",
+      appId: "1:578772393552:web:31e7d814d4c8b50e07fb55",
+      measurementId: "G-QNV0CT4B51"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function sendNotification() {
+      const title = document.getElementById('title').value.trim();
+      const message = document.getElementById('message').value.trim();
+
+      if (!title || !message) {
+        alert("Please enter both title and message.");
+        return;
+      }
+
+      db.collection("notifications").add({
+        title,
+        message,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        alert("✅ Notification sent!");
+        document.getElementById('title').value = '';
+        document.getElementById('message').value = '';
+      }).catch(err => {
+        alert("❌ Error: " + err.message);
+      });
+    }
+  </script>
+</body>
+</html>
