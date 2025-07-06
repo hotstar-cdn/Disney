@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Notifications</title>
+  <style>
+    #notification {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #2196f3;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      z-index: 9999;
+    }
+
+    #notification.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <h2>Student Page</h2>
+  <div id="notification"></div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyACTOtqAzcSOrObiSKKkCP1OjA7O0zFLNI",
+      authDomain: "notification-d9b90.firebaseapp.com",
+      projectId: "notification-d9b90",
+      storageBucket: "notification-d9b90.firebasestorage.app",
+      messagingSenderId: "578772393552",
+      appId: "1:578772393552:web:31e7d814d4c8b50e07fb55",
+      measurementId: "G-QNV0CT4B51"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const notificationBox = document.getElementById('notification');
+
+    db.collection("notifications")
+      .orderBy("timestamp", "desc")
+      .limit(1)
+      .onSnapshot(snapshot => {
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const lastSeenId = localStorage.getItem('lastSeenNotificationId');
+
+          if (doc.id !== lastSeenId) {
+            showNotification(`${data.title}: ${data.message}`);
+            localStorage.setItem('lastSeenNotificationId', doc.id);
+          }
+        });
+      });
+
+    function showNotification(text) {
+      notificationBox.textContent = text;
+      notificationBox.classList.add('show');
+      setTimeout(() => {
+        notificationBox.classList.remove('show');
+      }, 4000);
+    }
+  </script>
+</body>
+</html>
