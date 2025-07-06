@@ -11,6 +11,7 @@
         :root {
             --orange: #fb923c; --green: #10b981; --background: #f0f7ff;
             --text-dark: #1e293b; --text-light: #64748b; --card-bg: #ffffff;
+            --hint-bg: #f8fafc;
         }
         * { box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; margin: 0; background-color: var(--background); color: var(--text-dark); overflow: hidden; }
@@ -26,44 +27,55 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0 1.5rem 5rem; /* Add padding at bottom for stack effect */
+            padding: 0 1.5rem 5rem;
             position: relative;
         }
         .flashcard {
-            width: 100%;
-            max-width: 400px;
-            height: 60vh;
-            max-height: 450px;
-            position: absolute; /* IMPORTANT for stacking */
-            transform-style: preserve-3d;
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s;
-            cursor: pointer;
-            will-change: transform, opacity;
+            width: 100%; max-width: 400px; height: 60vh; max-height: 450px;
+            position: absolute; transform-style: preserve-3d;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer; will-change: transform, opacity;
+            opacity: 0; /* Initially hidden for shuffle animation */
         }
-        .flashcard.flipped { transform: rotateY(180deg); }
+        .flashcard.flipped { transform: rotateY(180deg) !important; }
         .card-face {
             position: absolute; height: 100%; width: 100%;
             backface-visibility: hidden; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; padding: 2rem;
             background-color: var(--card-bg); border-radius: 24px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1); text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden; /* To keep rounded corners with hint */
         }
-        .card-back { transform: rotateY(180deg); }
+        .card-front-content {
+            flex-grow: 1; display: flex; align-items: center; justify-content: center;
+            padding: 2rem 2rem 0; text-align: center;
+        }
         .question-text { font-size: 1.75rem; font-weight: 500; line-height: 1.4; }
-        .answer-text { font-size: 1.5rem; }
-        #hint-btn { background: none; border: none; color: #007bff; font-weight: 500; font-size: 0.875rem; letter-spacing: 0.5px; cursor: pointer; margin-top: auto; padding: 10px; }
-        .hint-text { font-style: italic; color: var(--text-light); margin-top: 1rem; font-size: 1rem; }
-        
-        /* Swipe Out Animations */
+        .hint-reveal-btn { background: none; border: none; color: #007bff; font-weight: 500; font-size: 0.875rem; letter-spacing: 0.5px; cursor: pointer; padding: 1.5rem; }
+        .hint-container {
+            display: none; /* Initially hidden */
+            width: 100%; padding: 1.5rem; margin-top: auto;
+            background-color: var(--hint-bg); border-top: 1px solid #e2e8f0;
+            text-align: left;
+        }
+        .hint-container h4 { margin: 0 0 0.25rem 0; font-size: 0.75rem; color: var(--text-light); letter-spacing: 1px; }
+        .hint-container p { margin: 0; font-size: 1rem; color: var(--text-dark); }
+        .card-back { transform: rotateY(180deg); align-items: center; justify-content: center; padding: 2rem; }
+        .answer-text { font-size: 1.5rem; text-align: center; }
+
+        /* Animations */
+        @keyframes deal-in {
+            from { opacity: 0; transform: translateY(100vh) rotate(45deg); }
+            to { opacity: 1; }
+        }
         .flashcard.swiped-right { animation: swipe-right 0.5s forwards ease-in-out; }
         .flashcard.swiped-left { animation: swipe-left 0.5s forwards ease-in-out; }
-        @keyframes swipe-right { to { transform: translateX(400px) rotate(25deg); opacity: 0; } }
-        @keyframes swipe-left { to { transform: translateX(-400px) rotate(-25deg); opacity: 0; } }
+        @keyframes swipe-right { to { transform: translateX(400px) rotate(25deg) !important; opacity: 0; } }
+        @keyframes swipe-left { to { transform: translateX(-400px) rotate(-25deg) !important; opacity: 0; } }
         
         .controls-footer { padding: 1.5rem; display: flex; gap: 1rem; justify-content: center; flex-shrink: 0; }
-        .control-btn { flex-grow: 1; max-width: 200px; padding: 1rem; border-radius: 999px; font-size: 1rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s, color 0.2s; background-color: var(--card-bg); }
-        .btn-learning { border: 2px solid var(--orange); color: var(--orange); }
-        .btn-know { border: 2px solid var(--green); color: var(--green); }
+        .control-btn { flex-grow: 1; max-width: 200px; padding: 1rem; border-radius: 999px; font-size: 1rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s, color 0.2s; background-color: var(--card-bg); border: 2px solid; }
+        .btn-learning { border-color: var(--orange); color: var(--orange); }
+        .btn-know { border-color: var(--green); color: var(--green); }
     </style>
 </head>
 <body>
@@ -76,9 +88,7 @@
             <button id="close-btn">×</button>
         </header>
 
-        <main class="card-area" id="card-area">
-            <!-- Card stack will be injected here -->
-        </main>
+        <main class="card-area" id="card-area"></main>
 
         <footer class="controls-footer">
             <button id="learn-btn" class="control-btn btn-learning">Still learning</button>
@@ -107,19 +117,28 @@
         function createCardElement(cardData) {
             const cardEl = document.createElement('div');
             cardEl.className = 'flashcard';
+
+            const hintHTML = cardData.hint ? `
+                <button class="hint-reveal-btn">SHOW HINT</button>
+                <div class="hint-container">
+                    <h4>HINT</h4>
+                    <p>${cardData.hint}</p>
+                </div>` : '';
+
             cardEl.innerHTML = `
                 <div class="card-face card-front">
-                    <p class="question-text">${cardData.question}</p>
-                    ${cardData.hint ? `<button class="hint-btn">SHOW A HINT</button>` : ''}
+                    <div class="card-front-content">
+                        <p class="question-text">${cardData.question}</p>
+                    </div>
+                    ${hintHTML}
                 </div>
                 <div class="card-face card-back">
                     <p class="answer-text">${cardData.answer}</p>
-                    ${cardData.hint ? `<p class="hint-text">Hint: ${cardData.hint}</p>` : ''}
                 </div>`;
             return cardEl;
         }
 
-        function renderCardStack() {
+        function renderCardStack(isInitialLoad = false) {
             cardArea.innerHTML = '';
             const cardsToShow = allCards.slice(currentIndex, currentIndex + 3).reverse();
 
@@ -127,27 +146,39 @@
                 const cardEl = createCardElement(cardData);
                 const stackPosition = cardsToShow.length - 1 - indexInStack;
 
-                // Style the card based on its position in the stack
-                cardEl.style.transform = `scale(${1 - (stackPosition * 0.05)}) translateY(${stackPosition * -15}px)`;
+                // Set initial transform for stacking
+                const scale = 1 - (stackPosition * 0.05);
+                const translateY = stackPosition * -15;
+                cardEl.style.transform = `scale(${scale}) translateY(${translateY}px)`;
                 cardEl.style.zIndex = allCards.length - indexInStack;
-                cardEl.style.opacity = '1';
+                
+                // Add the shuffle-in animation only on the first load
+                if (isInitialLoad) {
+                    cardEl.style.animation = `deal-in 0.6s ${indexInStack * 0.1}s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
+                } else {
+                    cardEl.style.opacity = '1'; // Make cards visible immediately on subsequent renders
+                }
 
                 cardArea.appendChild(cardEl);
 
                 // Add listeners only to the top card
                 if (stackPosition === 0) {
+                    // Click to flip card
                     cardEl.addEventListener('click', () => {
                         if (!isAnimating) cardEl.classList.toggle('flipped');
                     });
-                    const hintBtn = cardEl.querySelector('.hint-btn');
-                    if(hintBtn) {
+
+                    // Click to show hint
+                    const hintBtn = cardEl.querySelector('.hint-reveal-btn');
+                    if (hintBtn) {
                         hintBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            cardEl.querySelector('.hint-text').style.display = 'block';
+                            e.stopPropagation(); // VERY important: prevents the card from flipping
                             hintBtn.style.display = 'none';
+                            cardEl.querySelector('.hint-container').style.display = 'block';
                         });
                     }
 
+                    // Swipe gestures
                     const hammer = new Hammer(cardEl);
                     hammer.on('swiperight', handleKnow);
                     hammer.on('swipeleft', handleLearn);
@@ -157,21 +188,15 @@
 
         function processSwipe(direction) {
             if (isAnimating) return;
-            isAnimating = true;
-
             const activeCard = cardArea.querySelector('.flashcard:last-child');
             if (!activeCard) return;
+            isAnimating = true;
 
-            if (direction === 'know') {
-                knowCount++;
-                activeCard.classList.add('swiped-right');
-            } else {
-                learningCount++;
-                activeCard.classList.add('swiped-left');
-            }
+            (direction === 'know') ? knowCount++ : learningCount++;
+            activeCard.classList.add(direction === 'know' ? 'swiped-right' : 'swiped-left');
             
             currentIndex++;
-            progressCounterEl.textContent = `${currentIndex + 1 > allCards.length ? allCards.length : currentIndex + 1} of ${allCards.length} cards`;
+            progressCounterEl.textContent = `${currentIndex >= allCards.length ? allCards.length : currentIndex + 1} of ${allCards.length} cards`;
 
             setTimeout(() => {
                 if (currentIndex >= allCards.length) {
@@ -199,14 +224,14 @@
 
             try {
                 const docSnap = await db.collection('flashcardSets').doc(code).get();
-                if (docSnap.exists) {
+                if (docSnap.exists && docSnap.data().cards) {
                     const data = docSnap.data();
                     chapterTitleEl.textContent = data.chapter;
-                    allCards = data.cards || [];
+                    allCards = data.cards;
                     progressCounterEl.textContent = `1 of ${allCards.length} cards`;
-                    renderCardStack();
+                    renderCardStack(true); // Pass true for initial load to trigger animation
                 } else {
-                     mainContainer.innerHTML = '<h1>Error: Set not found for this code.</h1>';
+                     mainContainer.innerHTML = '<h1>Error: Set not found or is empty.</h1>';
                 }
             } catch (error) {
                 console.error("Error fetching document:", error);
