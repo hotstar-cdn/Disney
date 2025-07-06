@@ -1,0 +1,131 @@
+<!-- 2.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Score</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        :root {
+            --orange-bg: #fff7ed;
+            --orange-text: #f97316;
+            --green-bg: #f0fdf4;
+            --green-text: #16a34a;
+            --background: #f8f9fa;
+            --text-dark: #1e293b;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--text-dark);
+        }
+        .container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+        }
+        h1 {
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 2rem;
+        }
+        .score-card {
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+            font-size: 1.25rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .score-card span {
+            font-weight: 700;
+            font-size: 2rem;
+            margin-right: 1rem;
+        }
+        .score-know {
+            background-color: var(--green-bg);
+            color: var(--green-text);
+        }
+        .score-learning {
+            background-color: var(--orange-bg);
+            color: var(--orange-text);
+        }
+        .action-buttons {
+            margin-top: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .btn {
+            padding: 1rem;
+            border-radius: 999px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        #try-again-btn {
+            background-color: #007bff;
+            color: white;
+        }
+        #home-btn {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Your Results!</h1>
+        <div class="score-card score-know">
+            <span id="know-count">0</span> I know this
+        </div>
+        <div class="score-card score-learning">
+            <span id="learning-count">0</span> Still Learning
+        </div>
+        <div class="action-buttons">
+            <button id="try-again-btn" class="btn">Try This Deck Again</button>
+            <button id="home-btn" class="btn">Choose Another Chapter</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const knowCount = localStorage.getItem('knowCount') || 0;
+            const learningCount = localStorage.getItem('learningCount') || 0;
+            document.getElementById('know-count').textContent = knowCount;
+            document.getElementById('learning-count').textContent = learningCount;
+        });
+
+        document.getElementById('try-again-btn').addEventListener('click', () => {
+            const lastCode = localStorage.getItem('lastCode');
+            if (lastCode) {
+                window.location.href = `1.html?code=${lastCode}`;
+            } else {
+                alert("Couldn't find the code to try again.");
+                window.location.href = 'index.html';
+            }
+        });
+
+        document.getElementById('home-btn').addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
