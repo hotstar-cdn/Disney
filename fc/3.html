@@ -1,0 +1,172 @@
+<!-- 3.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher - Add Flashcards</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem;
+            color: #212529;
+        }
+        .container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            width: 90%;
+            max-width: 500px;
+        }
+        h1, h2 { color: #212529; font-weight: 700; text-align: center; }
+        h2 { font-size: 1.25rem; margin-top: 2rem; }
+        .form-group { margin-bottom: 1.25rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #495057; }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+        textarea { resize: vertical; min-height: 90px; }
+        button {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: white;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        button:hover { transform: translateY(-2px); }
+        #add-card-btn { background-color: #007bff; }
+        #save-set-btn { background-color: #28a745; margin-top: 1rem; }
+        #added-cards-list { text-align: left; margin-top: 1.5rem; padding-left: 20px; color: #495057; }
+        #generated-code { margin-top: 2rem; background: #e9ecef; padding: 1rem; border-radius: 8px; font-family: 'Courier New', monospace; font-weight: bold; word-break: break-all; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Create Flashcard Set</h1>
+        <div class="form-group">
+            <label for="chapter">Chapter / Topic Name</label>
+            <input type="text" id="chapter" placeholder="e.g., Cell: The Unit Of Life">
+        </div>
+        <hr>
+        <h2>Add a New Card</h2>
+        <div class="form-group">
+            <label for="question">Question</label>
+            <textarea id="question" placeholder="What is chromatin, and how is it different from chromosomes?"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="answer">Answer</label>
+            <textarea id="answer" placeholder="Chromatin is the relaxed, uncondensed form of DNA..."></textarea>
+        </div>
+        <div class="form-group">
+            <label for="hint">Hint (Optional)</label>
+            <input type="text" id="hint" placeholder="Think about the cell cycle stages...">
+        </div>
+        <button id="add-card-btn">Add Card to Set</button>
+        <button id="save-set-btn">Save Set & Get Code</button>
+        <div id="added-cards-section" style="display:none;">
+            <h3>Cards Added:</h3>
+            <ul id="added-cards-list"></ul>
+        </div>
+        <div id="generated-code" style="display:none;">
+            <h3>Share this code with your administrator:</h3>
+            <p id="code-display"></p>
+        </div>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+    <script src="firebase-init.js"></script>
+    <script>
+        const chapterInput = document.getElementById('chapter');
+        const questionInput = document.getElementById('question');
+        const answerInput = document.getElementById('answer');
+        const hintInput = document.getElementById('hint');
+        const addCardBtn = document.getElementById('add-card-btn');
+        const saveSetBtn = document.getElementById('save-set-btn');
+        const addedCardsSection = document.getElementById('added-cards-section');
+        const addedCardsList = document.getElementById('added-cards-list');
+        const generatedCodeDiv = document.getElementById('generated-code');
+        const codeDisplay = document.getElementById('code-display');
+
+        let currentCardSet = [];
+
+        addCardBtn.addEventListener('click', () => {
+            const question = questionInput.value.trim();
+            const answer = answerInput.value.trim();
+            if (!question || !answer) {
+                alert('Please enter a question and an answer.');
+                return;
+            }
+            const hint = hintInput.value.trim();
+            currentCardSet.push({ question, answer, hint });
+            
+            addedCardsSection.style.display = 'block';
+            const listItem = document.createElement('li');
+            listItem.textContent = `Q: ${question.substring(0, 30)}...`;
+            addedCardsList.appendChild(listItem);
+
+            questionInput.value = '';
+            answerInput.value = '';
+            hintInput.value = '';
+            questionInput.focus();
+        });
+
+        saveSetBtn.addEventListener('click', async () => {
+            const chapter = chapterInput.value.trim();
+            if (!chapter) {
+                alert('Please enter a chapter name.');
+                return;
+            }
+            if (currentCardSet.length === 0) {
+                alert('Please add at least one card to the set.');
+                return;
+            }
+
+            const code = 'set-' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+
+            try {
+                saveSetBtn.disabled = true;
+                saveSetBtn.textContent = 'Saving...';
+                await db.collection('flashcardSets').doc(code).set({
+                    chapter: chapter,
+                    cards: currentCardSet
+                });
+                
+                codeDisplay.textContent = code;
+                generatedCodeDiv.style.display = 'block';
+                saveSetBtn.style.backgroundColor = '#6c757d';
+                saveSetBtn.textContent = 'Saved!';
+                addCardBtn.disabled = true;
+                alert(`Set saved! Provide your administrator with this chapter name and code:\n\nChapter: ${chapter}\nCode: ${code}`);
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                alert('Could not save the set. Please check the console.');
+                saveSetBtn.disabled = false;
+                saveSetBtn.textContent = 'Save Set & Get Code';
+            }
+        });
+    </script>
+</body>
+</html>
