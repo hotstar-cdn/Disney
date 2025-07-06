@@ -1,0 +1,311 @@
+<!-- 1.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Flashcards</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        :root {
+            --orange: #fb923c;
+            --green: #10b981;
+            --background: #f0f7ff;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --card-bg: #ffffff;
+            --border-light: #e2e8f0;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            background-color: var(--background);
+            color: var(--text-dark);
+            overflow: hidden; /* Important for mobile feel */
+        }
+        .app-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .app-header {
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .header-info h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        .header-info p {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin: 0.25rem 0 0 0;
+        }
+        #close-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #e2e8f0;
+            border: none;
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: var(--text-light);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card-area {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 1.5rem;
+            perspective: 1500px;
+        }
+        .flashcard {
+            width: 100%;
+            max-width: 400px;
+            height: 60vh;
+            max-height: 450px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            background-color: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+        .question-text {
+            font-size: 1.75rem;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+        .answer-text {
+            font-size: 1.5rem;
+        }
+        #hint-btn {
+            background: none;
+            border: none;
+            color: #007bff;
+            font-weight: 500;
+            font-size: 0.875rem;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            margin-top: auto;
+            padding: 10px;
+        }
+        .hint-text {
+            font-style: italic;
+            color: var(--text-light);
+            margin-top: 1rem;
+            font-size: 1rem;
+        }
+        .controls-footer {
+            padding: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .control-btn {
+            flex-grow: 1;
+            max-width: 200px;
+            padding: 1rem;
+            border-radius: 999px; /* Pill shape */
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+            background-color: var(--card-bg);
+        }
+        .btn-learning {
+            border: 2px solid var(--orange);
+            color: var(--orange);
+        }
+        .btn-know {
+            border: 2px solid var(--green);
+            color: var(--green);
+        }
+        .btn-learning:hover { background-color: var(--orange); color: white; }
+        .btn-know:hover { background-color: var(--green); color: white; }
+
+        @keyframes swipe-right { to { transform: translateX(300px) rotate(20deg); opacity: 0; } }
+        @keyframes swipe-left { to { transform: translateX(-300px) rotate(-20deg); opacity: 0; } }
+    </style>
+</head>
+<body>
+    <div class="app-wrapper" id="main-container">
+        <header class="app-header">
+            <div class="header-info">
+                <h1 id="chapter-title">Loading...</h1>
+                <p id="progress-counter">Loading cards...</p>
+            </div>
+            <button id="close-btn">×</button>
+        </header>
+
+        <main class="card-area" id="card-area">
+            <!-- Flashcard will be injected here -->
+        </main>
+
+        <footer class="controls-footer">
+            <button id="learn-btn" class="control-btn btn-learning">Still learning</button>
+            <button id="know-btn" class="control-btn btn-know">I know this</button>
+        </footer>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+    <script src="firebase-init.js"></script>
+
+    <script>
+        const mainContainer = document.getElementById('main-container');
+        const chapterTitleEl = document.getElementById('chapter-title');
+        const progressCounterEl = document.getElementById('progress-counter');
+        const cardArea = document.getElementById('card-area');
+        const knowBtn = document.getElementById('know-btn');
+        const learnBtn = document.getElementById('learn-btn');
+        const closeBtn = document.getElementById('close-btn');
+
+        let cards = [];
+        let currentIndex = 0;
+        let knowCount = 0;
+        let learningCount = 0;
+        let activeCard = null;
+        let isAnimating = false;
+
+        function createCardElement(cardData) {
+            const cardWrapper = document.createElement('div');
+            cardWrapper.className = 'flashcard';
+            cardWrapper.innerHTML = `
+                <div class="card-face card-front">
+                    <p class="question-text">${cardData.question}</p>
+                    ${cardData.hint ? `<button id="hint-btn">SHOW A HINT</button>` : ''}
+                </div>
+                <div class="card-face card-back">
+                    <p class="answer-text">${cardData.answer}</p>
+                    ${cardData.hint ? `<p class="hint-text">Hint: ${cardData.hint}</p>` : ''}
+                </div>
+            `;
+            return cardWrapper;
+        }
+
+        function displayCard() {
+            if (currentIndex >= cards.length) {
+                goToScorePage();
+                return;
+            }
+            isAnimating = false;
+            cardArea.innerHTML = '';
+            const cardData = cards[currentIndex];
+            activeCard = createCardElement(cardData);
+            cardArea.appendChild(activeCard);
+            
+            progressCounterEl.textContent = `Deck 1 • ${currentIndex + 1} of ${cards.length} cards`;
+
+            // --- Event Listeners for the new card ---
+            activeCard.addEventListener('click', () => {
+                if (!isAnimating) activeCard.classList.toggle('flipped');
+            });
+
+            const hintBtn = activeCard.querySelector('#hint-btn');
+            if(hintBtn) {
+                hintBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // prevent card from flipping when hint is clicked
+                    const hintText = activeCard.querySelector('.hint-text');
+                    hintText.style.display = 'block';
+                    hintBtn.style.display = 'none';
+                });
+            }
+
+            const hammer = new Hammer(activeCard);
+            hammer.on('swiperight', handleKnow);
+            hammer.on('swipeleft', handleLearn);
+        }
+
+        function handleKnow() {
+            if (isAnimating) return;
+            isAnimating = true;
+            knowCount++;
+            activeCard.style.animation = 'swipe-right 0.5s forwards ease-in-out';
+            setTimeout(loadNextCard, 400);
+        }
+        
+        function handleLearn() {
+            if (isAnimating) return;
+            isAnimating = true;
+            learningCount++;
+            activeCard.style.animation = 'swipe-left 0.5s forwards ease-in-out';
+            setTimeout(loadNextCard, 400);
+        }
+        
+        function loadNextCard() {
+            currentIndex++;
+            displayCard();
+        }
+
+        function goToScorePage() {
+            localStorage.setItem('knowCount', knowCount);
+            localStorage.setItem('learningCount', learningCount);
+            window.location.href = '2.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('code');
+            
+            if (!code) {
+                mainContainer.innerHTML = '<h1>Error: No code found in URL.</h1>';
+                return;
+            }
+            
+            localStorage.setItem('lastCode', code);
+
+            try {
+                const docSnap = await db.collection('flashcardSets').doc(code).get();
+                if (docSnap.exists) {
+                    const data = docSnap.data();
+                    chapterTitleEl.textContent = data.chapter;
+                    cards = data.cards;
+                    displayCard();
+                } else {
+                     mainContainer.innerHTML = '<h1>Error: No flashcard set found for this code.</h1>';
+                }
+            } catch (error) {
+                console.error("Error fetching document:", error);
+                mainContainer.innerHTML = '<h1>Error loading flashcards. Check console.</h1>';
+            }
+        });
+
+        // Button controls
+        knowBtn.addEventListener('click', handleKnow);
+        learnBtn.addEventListener('click', handleLearn);
+        closeBtn.addEventListener('click', () => { window.location.href = 'index.html'; });
+    </script>
+</body>
+</html>
