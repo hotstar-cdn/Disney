@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
   <title>Story Viewer</title>
   <style>
     * {
@@ -48,9 +48,8 @@
     .progress-bar {
       flex: 1;
       background-color: rgba(255, 255, 255, 0.3);
-      position: relative;
-      overflow: hidden;
       border-radius: 2px;
+      overflow: hidden;
     }
 
     .progress-fill {
@@ -76,7 +75,6 @@
       right: 0;
     }
 
-    /* Overlay when paused */
     .pause-overlay {
       position: absolute;
       top: 0;
@@ -93,6 +91,12 @@
     .pause-overlay.show {
       opacity: 1;
     }
+
+    img, .click-area, .pause-overlay {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
   </style>
 </head>
 <body>
@@ -108,14 +112,17 @@
 <script>
   const params = new URLSearchParams(window.location.search);
   const images = params.getAll('img');
-  const duration = 3000; // ms
+  const duration = 3000;
 
   let currentIndex = 0;
   let interval;
   let isPaused = false;
+
   const imgElement = document.getElementById('storyImage');
   const progressContainer = document.getElementById('progressContainer');
   const pauseOverlay = document.getElementById('pauseOverlay');
+  const leftZone = document.getElementById('leftZone');
+  const rightZone = document.getElementById('rightZone');
 
   function createProgressBars() {
     progressContainer.innerHTML = '';
@@ -186,19 +193,24 @@
     }, fillInterval);
   }
 
-  // Mouse/touch events for pause/resume
-  [imgElement, document.getElementById('leftZone'), document.getElementById('rightZone')].forEach(el => {
+  // Disable context menu (long press on mobile, right-click on desktop)
+  [imgElement, leftZone, rightZone].forEach(el => {
+    el.addEventListener('contextmenu', e => e.preventDefault());
+  });
+
+  // Mouse/touch pause-resume
+  [imgElement, leftZone, rightZone].forEach(el => {
     el.addEventListener('mousedown', pause);
     el.addEventListener('mouseup', resume);
     el.addEventListener('touchstart', pause);
     el.addEventListener('touchend', resume);
   });
 
-  // Click left/right to navigate
-  document.getElementById('leftZone').addEventListener('click', () => prevImage());
-  document.getElementById('rightZone').addEventListener('click', () => nextImage());
+  // Click navigation
+  leftZone.addEventListener('click', prevImage);
+  rightZone.addEventListener('click', nextImage);
 
-  // Initialize
+  // Start viewer
   if (images.length > 0) {
     createProgressBars();
     showImage(currentIndex);
