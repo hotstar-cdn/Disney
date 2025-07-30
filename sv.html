@@ -75,6 +75,24 @@
     #rightZone {
       right: 0;
     }
+
+    /* Overlay when paused */
+    .pause-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.3);
+      z-index: 5;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .pause-overlay.show {
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -82,6 +100,7 @@
 <div id="viewer">
   <div class="progress-container" id="progressContainer"></div>
   <img id="storyImage" src="" alt="Story"/>
+  <div class="pause-overlay" id="pauseOverlay"></div>
   <div class="click-area" id="leftZone"></div>
   <div class="click-area" id="rightZone"></div>
 </div>
@@ -94,9 +113,9 @@
   let currentIndex = 0;
   let interval;
   let isPaused = false;
-  let progressIntervals = [];
   const imgElement = document.getElementById('storyImage');
   const progressContainer = document.getElementById('progressContainer');
+  const pauseOverlay = document.getElementById('pauseOverlay');
 
   function createProgressBars() {
     progressContainer.innerHTML = '';
@@ -138,10 +157,12 @@
 
   function pause() {
     isPaused = true;
+    pauseOverlay.classList.add('show');
   }
 
   function resume() {
     isPaused = false;
+    pauseOverlay.classList.remove('show');
   }
 
   function resetProgress() {
@@ -149,9 +170,8 @@
   }
 
   function animateProgress() {
-    let start = null;
-    const fillInterval = 50; // update every 50ms
     let elapsed = 0;
+    const fillInterval = 50;
 
     interval = setInterval(() => {
       if (!isPaused) {
@@ -166,20 +186,17 @@
     }, fillInterval);
   }
 
-  // Mouse/touch hold to pause/resume
-  imgElement.addEventListener('mousedown', pause);
-  imgElement.addEventListener('mouseup', resume);
-  imgElement.addEventListener('touchstart', pause);
-  imgElement.addEventListener('touchend', resume);
+  // Mouse/touch events for pause/resume
+  [imgElement, document.getElementById('leftZone'), document.getElementById('rightZone')].forEach(el => {
+    el.addEventListener('mousedown', pause);
+    el.addEventListener('mouseup', resume);
+    el.addEventListener('touchstart', pause);
+    el.addEventListener('touchend', resume);
+  });
 
   // Click left/right to navigate
-  document.getElementById('leftZone').addEventListener('click', () => {
-    prevImage();
-  });
-
-  document.getElementById('rightZone').addEventListener('click', () => {
-    nextImage();
-  });
+  document.getElementById('leftZone').addEventListener('click', () => prevImage());
+  document.getElementById('rightZone').addEventListener('click', () => nextImage());
 
   // Initialize
   if (images.length > 0) {
